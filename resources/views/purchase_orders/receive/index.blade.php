@@ -107,9 +107,21 @@
                                         </div>
                                         <h6 class="fw-semibold text-primary mb-1" style="">{{ $receive->code }}</h6>
                                     </div>
-                                    <div>
+                                    <div class="mb-1">
                                         <div class=""><i class="ti ti-building-warehouse me-2"></i> {{ $receive->purchase->warehouse->name }}</div>
                                         <div class=""><i class="ti ti-user-circle me-2"></i> {{ $receive->user->name }}</div>
+                                    </div>
+                                    <div>
+                                        @php
+                                        $statusStock = [
+                                            '0' => ['label' => 'Belum masuk ke Stock','color' => 'secondary'],
+                                            '1' => ['label' => 'Tercatat di Stock','color' => 'success'],
+                                        ];
+                                        @endphp
+
+                                        <div class="fw-normal fs-1 text-muted" style="">Status Stock
+                                        </div>
+                                        <h6 class="fw-semibold fs-2 text-{{ $statusStock[$receive->is_stocked]['color'] }} mb-1" style="">{{ $statusStock[$receive->is_stocked]['label'] }}</h6>
                                     </div>
                                 </td>
                                 <td>
@@ -174,25 +186,11 @@
                                             <i class="ti ti-dots fs-5"></i>
                                         </a>
                                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                            @if($receive->status != '2')
-                                            <li>
-                                                <button type="button" class="dropdown-item d-flex {{$receive->status == 0 ? 'text-warning' : 'text-success'}} align-items-center gap-3"
-                                                    data-bs-toggle="modal" data-bs-target="#processModal-{{$receive->id}}"><i
-                                                        class="fs-4 ti {{$receive->status == 0 ? 'ti-loader-3' : 'ti-check'}}"></i>{{$receive->status == 0 ? 'Proses Pembelian' : 'Selesaikan Pembelian'}}</button>
-                                            </li>
-                                            @endif
                                             <li>
                                                 <button type="button" class="dropdown-item d-flex align-items-center gap-3 text-danger"
                                                     onclick="seePDF('pdf.po','{{$receive->id}}')"><i
-                                                        class="fs-4 ti ti-printer"></i>Cetak PO</button>
+                                                        class="fs-4 ti ti-printer"></i>Cetak Penerimaan</button>
                                             </li>
-                                            @if($receive->status == '2')
-                                            <li>
-                                                <button type="button" class="dropdown-item d-flex text-white bg-primary align-items-center gap-3"
-                                                    data-bs-toggle="modal" data-bs-target="#invoicingModal-{{$receive->id}}"><i
-                                                        class="fs-4 ti ti-credit-card"></i>Generate Invoice</button>
-                                            </li>
-                                            @endif
                                             <li>
                                                 <a href="{{ route('receive.setting', $receive->id) . '#data' }}"
                                                     class="dropdown-item text-primary d-flex align-items-center gap-3"><i
@@ -202,11 +200,6 @@
                                                 <a href="{{ route('receive.setting', $receive->id) . '#produk' }}"
                                                     class="dropdown-item text-secondary d-flex align-items-center gap-3"><i
                                                         class="fs-4 ti ti-package"></i>Kelola Produk</a>
-                                            </li>
-                                            <li>
-                                                <a href="{{ route('receive.setting', $receive->id) . '#lampiran' }}"
-                                                    class="dropdown-item text-secondary d-flex align-items-center gap-3"><i
-                                                        class="fs-4 ti ti-files"></i>Kelola File</a>
                                             </li>
                                             <li>
                                                 <button type="button"

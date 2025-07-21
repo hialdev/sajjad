@@ -32,11 +32,14 @@ class PurchaseOrderController extends Controller
     public function add(){
         $reqorders = RequestOrder::orderBy('code', 'ASC')->get();
         $transports = Transport::whereDoesntHave('purchaseOrder')
+                                ->whereDoesntHave('distribution')
+                                ->whereDoesntHave('requestProcess')
                                 ->orderBy('code', 'ASC')
                                 ->get();
         $principals = Principal::orderBy('name', 'ASC')->get();
         $pics = PrincipalPic::orderBy('name', 'ASC')->get();
         $warehouses = Warehouse::orderBy('name', 'ASC')->get();
+
         return view('purchase_orders.add', compact('transports', 'reqorders', 'principals', 'pics', 'warehouses'));
     }
 

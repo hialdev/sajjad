@@ -30,4 +30,94 @@ class Store extends Model
             }
         });
     }
+
+    public function getTotalBalAttribute()
+    {
+        return Bal::where('nowin_type', 'store')->where('is_unpack', 0)->where('nowin_id', $this->id)->count();
+    }
+
+    public function analytics(){
+        $total_remaining = 0;
+        $total_in = 0;
+        $total_out = 0;
+        $total_onway = 0;
+        $total_remaining = 0;
+        $stocks = $this->sstocks();
+
+        foreach ($stocks as $stock) {
+            $total_remaining += $stock->stock_remaining;
+            $total_in += $stock->stock_in;
+            $total_out += $stock->stock_out;
+            $total_onway += $stock->stock_onway;
+        }
+
+        $sstocks = $this->sstockMeters();
+        $ss_total = 0;
+        $ss_onway = 0;
+        $ss_remaining = 0;
+        foreach ($sstocks as $sstock) {
+            $ss_total += $sstock->qty;
+            $ss_onway += $sstock->qty_onway;
+            $ss_remaining += $sstock->qty_remaining;
+        }
+
+        return (object) [
+            'stock' => (object) [
+                'total_remaining' => $total_remaining,
+                'total_in' => $total_in,
+                'total_out' => $total_out,
+                'total_onway' => $total_onway,
+                'total_product' => $stocks->count(),
+            ],
+            'meteran' => (object) [
+                'total_product' => $sstocks->count(),
+                'total_in' => $ss_total,
+                'total_onway' => $ss_onway,
+                'total_remaining' => $ss_remaining,
+            ],
+            'total_bal' => $this->total_bal,
+        ];
+    }
+
+    public function products()
+   {
+      $stockProductIds = $this->sstocks()->pluck('product_id')->all();
+      $stockMeterProductIds = $this->sstockmeters()->pluck('product_id')->all();
+
+      $productIds = collect($stockProductIds)
+         ->merge($stockMeterProductIds)
+         ->unique()
+         ->values();
+
+      return Product::whereIn('id', $productIds)->get();
+   }
+
+    public function getProductRemaining($product_id)
+    {
+        $product = Product::find($product_id);
+        $remainingQty = 0;
+
+        if($product?->type->type == 'satuan'){
+            $stocks = $this->sstocks()->where('product_id', $product_id);
+            foreach ($stocks as $stock) {
+                $remainingQty += $stock->stock_remaining;
+            }
+        }else{
+
+            $stocks = $this->sstockMeters()->where('product_id', $product_id);
+            foreach ($stocks as $stock) {
+                $remainingQty += $stock->qty_remaining;
+            }
+        }
+
+        return $remainingQty;
+    }
+
+    public function sstocks(){
+        return Stock::analyticProductsInLocation('store', $this->id);
+    }
+
+    public function sstockMeters(){
+        return StockMeter::analyticProductsInLocation('store', $this->id);
+    }
 }

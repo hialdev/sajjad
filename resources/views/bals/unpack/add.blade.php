@@ -11,9 +11,9 @@
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item">
-                                <a class="text-muted text-decoration-none" href="{{ route('bal.unpack.index', $bal->id) }}">Produk</a>
+                                <a class="text-muted text-decoration-none" href="{{ route('bal.index') }}">Bal</a>
                             </li>
-                            <li class="breadcrumb-item" aria-current="page">Bongkar</li>
+                            <li class="breadcrumb-item" aria-current="page">Bongkar Bal : {{$bal->name.' ('.$bal->code.')'}}</li>
                         </ol>
                     </nav>
                 </div>
@@ -102,7 +102,7 @@
                             @enderror
                         </div>
                         
-                        <button type="submit" class="btn btn-primary">Bongkar Bal dan Input Product</button>
+                        <button type="submit" class="btn btn-primary">Bongkar Bal</button>
                     </form>
                 </div>
             </div>

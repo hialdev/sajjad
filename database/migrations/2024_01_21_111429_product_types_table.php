@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        //
+        Schema::connection('osano')->dropIfExists('product_types');
     }
 };

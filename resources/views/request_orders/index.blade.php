@@ -97,9 +97,6 @@
                                 <h6 class="fs-3 fw-semibold mb-0">Kalkulasi</h6>
                             </th>
                             <th>
-                                <h6 class="fs-3 fw-semibold mb-0">Pemrosesan</h6>
-                            </th>
-                            <th>
                                 <h6 class="fs-3 fw-semibold mb-0">Lampiran</h6>
                             </th>
                             <th>
@@ -215,6 +212,9 @@
                                                                     alt="Image Product {{ $reqproduct->product->name }} in Cart" class="d-block rounded-2"
                                                                     style="width: 5em; height:5em; object-fit:cover">
                                                                 <div>
+                                                                    <div class="mb-1">
+                                                                        <div class="d-inline-block p-1 px-2 rounded-2 bg-primary-subtle text-primary fs-2">{{ $reqproduct->product->type->type }}</div>
+                                                                    </div>
                                                                     <div class="text-decoration-none text-dark fs-3 fw-semibold">
                                                                         {{ $reqproduct->product->name }}</div>
                                                                     <div class="text-muted fs-2 mb-2">
@@ -275,12 +275,6 @@
                                     @else
                                         <div>Tidak ada Products</div>
                                     @endif
-                                </td>
-                                <td>
-                                    <a href="{{route('request-order.setting', $reqorder->id).'#process'}}" class="fs-2 text-center d-inline-flex p-2 px-3 align-items-center gap-2 text-white bg-primary rounded-3"
-                                    >
-                                        <i class="fs-4 ti ti-building-factory"></i> {{ count($reqorder->purchaseOrders) }} Pembelian Principal
-                                    </a>
                                 </td>
                                 <td>
                                     <a href="{{route('request-order.setting', $reqorder->id).'#lampiran'}}"

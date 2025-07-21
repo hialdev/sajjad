@@ -13,21 +13,23 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::connection('osano')->create('warehouse_stock_meters', function (Blueprint $table) {
+        Schema::connection('osano')->create('purchase_receive_products', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('warehouse_id');
-            $table->uuid('stock_meter_id');
-            
+            $table->uuid('purchase_receive_id');
+            $table->uuid('purchase_product_id');
+            $table->bigInteger('receive_qty');
+            $table->text('description')->nullable();
+
             $table->timestamps();
 
-            $table->foreign('warehouse_id')
+            $table->foreign('purchase_product_id')
                 ->references('id')
-                ->on('warehouses')
+                ->on('purchase_order_products')
                 ->onDelete('restrict');
-                
-            $table->foreign('stock_meter_id')
+
+            $table->foreign('purchase_receive_id')
                 ->references('id')
-                ->on('stock_meters')
+                ->on('purchase_receives')
                 ->onDelete('restrict');
         });
     }
@@ -39,6 +41,6 @@ return new class extends Migration
      */
     public function down()
     {
-        //
+        Schema::connection('osano')->dropIfExists('purchase_receive_products');
     }
 };

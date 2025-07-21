@@ -16,8 +16,11 @@ return new class extends Migration
         Schema::connection('osano')->create('stocks', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('product_id');
+            $table->enum('nowin_type', ['warehouse', 'store']);
+            $table->uuid('nowin_id')->nullable();
             $table->bigInteger('qty');
             
+            $table->enum('trx_type', ['in', 'out', 'onway']);
             $table->timestamps();
 
             $table->foreign('product_id')

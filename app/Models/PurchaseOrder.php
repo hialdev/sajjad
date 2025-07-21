@@ -107,4 +107,18 @@ class PurchaseOrder extends Model
     public function warehouse(){
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
+
+    public function isFullyReceived()
+    {
+        foreach ($this->products as $product) {
+            if ($product->remaining_receive > 0) {
+                return false; // Masih ada yang bisa diterima
+            }
+        }
+        return true; // Semua sudah diterima
+    }
+
+    public function receive(){
+        return $this->hasOne(PurchaseReceive::class, 'purchase_order_id');
+    }
 }

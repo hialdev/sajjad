@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down()
     {
-        //
+        Schema::connection('osano')->dropIfExists('stock_movement_files');
     }
 };

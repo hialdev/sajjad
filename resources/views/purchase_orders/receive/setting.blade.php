@@ -87,35 +87,48 @@
     <div class="">
         <div class="row">
             <div class="col-6 col-md-3 mb-auto d-flex align-items-center gap-2">
-                @if($purchase->status == 2)
-                <form action="{{ route('purchase-order.generate', $purchase->id) }}" method="POST">
+                @if($receive->purchase->status == 2)
+                <form action="{{ route('purchase-order.generate', $receive->purchase->id) }}" method="POST">
                     @csrf
-                    <button class="btn btn-primary {{$purchase->generate_invoice ? 'd-none' : ''}}"><i class="ti ti-credit-card me-1"></i> Tagih</button>
+                    <button class="btn btn-primary {{$receive->purchase->generate_invoice ? 'd-none' : ''}}"><i class="ti ti-credit-card me-1"></i> Tagih</button>
                 </form>
                 @endif
-                @if($purchase->status != 2)
-                <button type="button" class="btn p-2 px-3 d-flex {{$purchase->status == 0 ? 'btn-warning' : 'btn-success'}} align-items-center gap-2"
-                            data-bs-toggle="modal" data-bs-target="#processModal-{{$purchase->id}}"><i
-                                class="fs-4 ti {{$purchase->status == 0 ? 'ti-loader-3' : 'ti-check'}}"></i><span class="d-none d-sm-block">{{$purchase->status == 0 ? 'Proses' : 'Selesaikan'}}</span></button>
+                @if($receive->purchase->status != 2 && !$receive->is_stocked)
+                <button type="button" class="btn p-2 px-3 d-flex btn-success align-items-center gap-2"
+                            data-bs-toggle="modal" data-bs-target="#processModal-{{$receive->purchase->id}}"><i
+                                class="fs-4 ti ti-check"></i><span class="d-none d-sm-block">Selesaikan</span></button>
                 <!-- Process Modal -->
-                <div class="modal fade" id="processModal-{{$purchase->id}}" tabindex="-1"
+                <div class="modal fade" id="processModal-{{$receive->purchase->id}}" tabindex="-1"
                     aria-labelledby="vertical-center-modal" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                         <div class="modal-content">
                             <div class="modal-header d-flex align-items-center">
                                 <h4 class="modal-title" id="myLargeModalLabel" style="white-space: normal">
-                                    {{$purchase->status == 0 ? 'Proses Pembelian' : 'Selesaikan Pembelian'}} {{$purchase->code}}
+                                    Selesaikan Pembelian {{$receive->purchase->code}} dan Penerimaan {{$receive->code}}
                                 </h4>
                                 <button type="button" class="btn-close mb-auto" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>
                             <div class="modal-body pt-0">
-                                <form action="{{ route('purchase-order.process', $purchase->id) }}" method="POST">
+                                <form id="receiveForm" action="{{ route('receive.process', $receive->id) }}" method="POST">
                                     @csrf
-                                    <p class="text-muted" style="white-space: normal">Pastikan Keadaan lapangan sudah sesuai, dan dapat dipertanggung jawabkan dengan baik untuk <strong>{{$purchase->status == 0 ? 'Proses Pembelian' : 'Selesaikan Pembelian'}} dengan kode {{$purchase->code}}</strong></p>
+                                    <p class="text-muted" style="white-space: normal">
+                                        Pastikan Keadaan lapangan sudah sesuai, dan dapat dipertanggung jawabkan dengan baik untuk
+                                        <strong>Selesaikan Pembelian ({{ $receive->purchase->code }}) dan Penerimaan ({{ $receive->code }})!
+                                            Barang yang diterima akan ditambahkan kedalam stock</strong>
+                                    </p>
+
                                     <div class="d-flex gap-1 align-items-center justify-content-end">
-                                        <button type="submit"
-                                            class="btn {{$purchase->status == 0 ? 'btn-warning' : 'btn-success'}}">{{$purchase->status == 0 ? 'Proses Pembelian' : 'Selesaikan Pembelian'}}</button>
+                                        <button id="submitBtn" type="submit" class="btn btn-success">
+                                            Selesaikan Pembelian & Penerimaan
+                                        </button>
+                                    </div>
+                                    <div id="loadingState" class="text-center mt-3" style="display: none;">
+                                        <hr>
+                                        <div class="spinner-border text-success" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <div class="mt-2 fw-bold text-success">Memproses Penerimaan ke Stock...</div>
                                     </div>
                                 </form>
                             </div>
@@ -125,15 +138,14 @@
                 @endif
                 @php
                     $status = [
-                        '0' => ['label' => 'Pending','color' => 'secondary'],
-                        '1' => ['label' => 'Diproses','color' => 'warning',],
-                        '2' => ['label' => 'Selesai','color' => 'success'],
+                        '0' => ['label' => 'Terbuka','color' => 'secondary'],
+                        '1' => ['label' => 'Dikunci','color' => 'danger',],
                     ];
                 @endphp
                 <div>
-                    <div class="fw-normal fs-1 text-muted" style="">Status Permintaan
+                    <div class="fw-normal fs-1 text-muted" style="">Status Penerimaan
                     </div>
-                    <h6 class="fw-semibold fs-2 text-{{ $status[$purchase->status]['color'] }} mb-1" style="">{{ $status[$purchase->status]['label'] }}</h6>
+                    <h6 class="fw-semibold fs-2 text-{{ $status[$receive->is_lock ?? 0]['color'] }} mb-1" style="">{{ $status[$receive->is_lock ?? 0]['label'] }}</h6>
                 </div>
             </div>
             <div class="col-md-6 order-first order-md-0 d-flex align-items-start gap-2 flex-wrap">
@@ -150,14 +162,14 @@
                     </div>
                     <div class="step" data-step="3">
                         <div class="circle">3</div>
-                        <div class="label fs-2">Review</div>
+                        <div class="label fs-2">Bal</div>
                         <div class="line"></div>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-md-3 mb-4 d-flex justify-content-end align-items-start gap-2">
                 <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteReceive-{{$receive->id}}"><i class="ti ti-trash"></i> <span class="ms-1 d-none d-md-inline-block">Hapus</span></button>
-                <button onclick="seePDF('pdf.po','{{$purchase->id}}')" class="btn btn-danger" style="background:rgb(186, 55, 55); border-color:rgb(186, 55, 55)"><i class="ti ti-printer me-2"></i><span class="d-none d-sm-inline-block">Cetak</span></button>
+                <button onclick="seePDF('pdf.po','{{$receive->purchase->id}}')" class="btn btn-danger" style="background:rgb(186, 55, 55); border-color:rgb(186, 55, 55)"><i class="ti ti-printer me-2"></i><span class="d-none d-sm-inline-block">Cetak</span></button>
             </div>
 
             <!-- Delete Modal -->
@@ -180,7 +192,7 @@
                             <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                                 Close
                             </button>
-                            <form action="{{route('purchase-order.destroy', $purchase->id)}}" method="POST">
+                            <form action="{{route('purchase-order.destroy', $receive->purchase->id)}}" method="POST">
                                 @csrf
                                 @method('delete')
                                 <button type="submit" class="btn btn-dark">Ya, Hapus</button>
@@ -225,7 +237,7 @@
                                 <div>
                                     <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Tanggal</div>
                                     <h6 class="fs-2 fw-semibold text-success mb-1" style="">
-                                        {{ \Carbon\Carbon::parse($purchase->date)->format('d F Y') }}</h6>
+                                        {{ \Carbon\Carbon::parse($receive->purchase->date)->format('d F Y') }}</h6>
                                 </div>
                                 <div>
                                     <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Kode Pembelian
@@ -250,67 +262,67 @@
                                 <div>
                                     <div class="fw-normal fs-1 text-muted" style="">Status Permintaan
                                     </div>
-                                    <h6 class="fw-semibold fs-2 text-{{ $status[$purchase->status]['color'] }} mb-1" style="">{{ $status[$purchase->status]['label'] }}</h6>
+                                    <h6 class="fw-semibold fs-2 text-{{ $status[$receive->purchase->status]['color'] }} mb-1" style="">{{ $status[$receive->purchase->status]['label'] }}</h6>
                                 </div>
                                 <div>
                                     <div class="fw-normal fs-1 text-muted" style="">Status Penagihan Invoice
                                     </div>
-                                    <h6 class="fw-semibold fs-2 text-{{ $statusInvoice[$purchase->generate_invoice]['color'] }} mb-1" style="">{{ $statusInvoice[$purchase->generate_invoice]['label'] }}</h6>
+                                    <h6 class="fw-semibold fs-2 text-{{ $statusInvoice[$receive->purchase->generate_invoice]['color'] }} mb-1" style="">{{ $statusInvoice[$receive->purchase->generate_invoice]['label'] }}</h6>
                                 </div>
                                 <div style="min-width: 10em">
                                     <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Deksripsi</div>
-                                    <p class="mb-1 fs-2" style="white-space:normal !important;">{{ $purchase->description ?? 'tidak ada deskripsi' }}</p>
+                                    <p class="mb-1 fs-2" style="white-space:normal !important;">{{ $receive->purchase->description ?? 'tidak ada deskripsi' }}</p>
                                 </div>
                             </div>
                             <div class="col-md-4 mb-3 mb-md-0">
                                 <div class="">
                                     <h6>Memesan Ke Principal</h6>
-                                    <a href="{{route('principal.setting', $purchase->principal->id)}}" target="_blank" class="border border-primary p-1 px-2 rounded-2 d-inline-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-building-skyscraper mb-0 fs-3"></i> {{ $purchase->principal->name }}
+                                    <a href="{{route('principal.setting', $receive->purchase->principal->id)}}" target="_blank" class="border border-primary p-1 px-2 rounded-2 d-inline-flex align-items-center fs-2 mb-1 gap-2">
+                                        <i class="ti ti-building-skyscraper mb-0 fs-3"></i> {{ $receive->purchase->principal->name }}
                                     </a>
                                     <div class="fw-normal fs-1 text-muted" style="">PIC Principal</div>
                                     <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-user-circle mb-0 fs-3"></i> {{ $purchase->pic->name }}
+                                        <i class="ti ti-user-circle mb-0 fs-3"></i> {{ $receive->purchase->pic->name }}
                                     </div>
                                     <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-mail mb-0 fs-3"></i> {{ $purchase->pic->email ?? '-' }}
+                                        <i class="ti ti-mail mb-0 fs-3"></i> {{ $receive->purchase->pic->email ?? '-' }}
                                     </div>
                                     <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-phone mb-0 fs-3"></i> {{ $purchase->pic->phone ?? '-' }}
+                                        <i class="ti ti-phone mb-0 fs-3"></i> {{ $receive->purchase->pic->phone ?? '-' }}
                                     </div>
                                 </div>
                                 <hr>
                                 <div class="">
                                     <h6>Dikirim ke Gudang</h6>
-                                    <a href="{{route('warehouse.index', ['search' => $purchase->warehouse->name])}}" target="_blank" class="border border-primary p-1 px-2 rounded-2 d-inline-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-building-warehouse mb-0 fs-3"></i> {{ $purchase->warehouse->name }}
+                                    <a href="{{route('warehouse.index', ['search' => $receive->purchase->warehouse->name])}}" target="_blank" class="border border-primary p-1 px-2 rounded-2 d-inline-flex align-items-center fs-2 mb-1 gap-2">
+                                        <i class="ti ti-building-warehouse mb-0 fs-3"></i> {{ $receive->purchase->warehouse->name }}
                                     </a>
                                     <div class="fw-normal fs-1 text-muted" style="">Detail</div>
                                     <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-map-2 mb-0 fs-3"></i> {{ $purchase->warehouse->address.', '.$purchase->warehouse->city.'. '.$purchase->warehouse->postal_code }}
+                                        <i class="ti ti-map-2 mb-0 fs-3"></i> {{ $receive->purchase->warehouse->address.', '.$receive->purchase->warehouse->city.'. '.$receive->purchase->warehouse->postal_code }}
                                     </div>
                                     <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-mail mb-0 fs-3"></i> {{ $purchase->warehouse->email ?? '-' }}
+                                        <i class="ti ti-mail mb-0 fs-3"></i> {{ $receive->purchase->warehouse->email ?? '-' }}
                                     </div>
                                     <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-phone mb-0 fs-3"></i> {{ $purchase->warehouse->phone ?? '-' }}
+                                        <i class="ti ti-phone mb-0 fs-3"></i> {{ $receive->purchase->warehouse->phone ?? '-' }}
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-4 mb-3 mb-md-0">
                                 <div class="">
                                     <h6>Dengan Detail Logistik / Pengangkutan</h6>
-                                    @if( $purchase->tarnsport )
-                                    <a href="{{route('logistic.setting', $purchase->transport->logistic->id)}}" target="_blank" class="border border-primary p-1 px-2 rounded-2 d-inline-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-truck-delivery mb-0 fs-3"></i> {{ $purchase->transport->logistic->name }}
+                                    @if( $receive->purchase->tarnsport )
+                                    <a href="{{route('logistic.setting', $receive->purchase->transport->logistic->id)}}" target="_blank" class="border border-primary p-1 px-2 rounded-2 d-inline-flex align-items-center fs-2 mb-1 gap-2">
+                                        <i class="ti ti-truck-delivery mb-0 fs-3"></i> {{ $receive->purchase->transport->logistic->name }}
                                     </a>
                                     <a href="javascript:void(0);" title="Klik untuk melihat detail" class="d-flex text-secondary align-items-center fs-2 mb-1 gap-2"
-                                        data-bs-toggle="modal" data-bs-target="#detailDelivery-{{$purchase->id}}"
+                                        data-bs-toggle="modal" data-bs-target="#detailDelivery-{{$receive->purchase->id}}"
                                     >
                                         <i class="ti ti-exchange mb-0 fs-3"></i> Detail Antar Jemput
                                     </a>
                                     <!-- List Product modal -->
-                                    <div class="modal fade " id="detailDelivery-{{$purchase->id}}" tabindex="-1"
+                                    <div class="modal fade " id="detailDelivery-{{$receive->purchase->id}}" tabindex="-1"
                                         aria-labelledby="vertical-center-modal" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                                             <div class="modal-content">
@@ -325,13 +337,13 @@
                                                     <div class="p-3 rounded-3 border border-dashed mb-2 border-secondary">
                                                         <div class="fs-2 text-muted">Penjemputan Barang</div>
                                                         <div>
-                                                            <div class="fs-3">{{$purchase->pickup->address.', '.$purchase->pickup->city.'. '.$purchase->pickup->postal_code}}</div>
+                                                            <div class="fs-3">{{$receive->purchase->pickup->address.', '.$receive->purchase->pickup->city.'. '.$receive->purchase->pickup->postal_code}}</div>
                                                         </div>
                                                     </div>
                                                     <div class="p-3 rounded-3 border border-dashed border-primary">
                                                         <div class="fs-2 text-muted">Pengantaran Barang</div>
                                                         <div>
-                                                            <div class="fs-3">{{$purchase->delivery->address.', '.$purchase->delivery->city.'. '.$purchase->delivery->postal_code}}</div>
+                                                            <div class="fs-3">{{$receive->purchase->delivery->address.', '.$receive->purchase->delivery->city.'. '.$receive->purchase->delivery->postal_code}}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -340,13 +352,13 @@
                                     </div>
                                     <div class="fw-normal fs-1 text-muted" style="">Contact Person</div>
                                     <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-user-circle mb-0 fs-3"></i> {{ $purchase->transport->logistic->cp_name }}
+                                        <i class="ti ti-user-circle mb-0 fs-3"></i> {{ $receive->purchase->transport->logistic->cp_name }}
                                     </div>
                                     <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-mail mb-0 fs-3"></i> {{ $purchase->transport->logistic->cp_email ?? '-' }}
+                                        <i class="ti ti-mail mb-0 fs-3"></i> {{ $receive->purchase->transport->logistic->cp_email ?? '-' }}
                                     </div>
                                     <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                        <i class="ti ti-phone mb-0 fs-3"></i> {{ $purchase->transport->logistic->cp_phone ?? '-' }}
+                                        <i class="ti ti-phone mb-0 fs-3"></i> {{ $receive->purchase->transport->logistic->cp_phone ?? '-' }}
                                     </div>
                                     @else
                                     <div class="fs-2">Diurus Oleh Principal</div>
@@ -354,25 +366,25 @@
                                 </div>
                                 <hr>
                                 <h6>Kalkulasi Pembayaran</h6>
-                                @if($purchase->products->count() > 0)
+                                @if($receive->purchase->products->count() > 0)
                                 <div>
                                     <div class="fw-normal fs-1 text-muted" style="">Total Nilai Awal</div>
-                                    <h6 class="fw-semibold fs-2 text-primary mb-1" style="">{{ formatRupiah($purchase->total_price) }}</h6>
+                                    <h6 class="fw-semibold fs-2 text-primary mb-1" style="">{{ formatRupiah($receive->purchase->total_price) }}</h6>
                                 </div>
                                 <div>
                                     <div class="fw-normal fs-1 text-muted" style="">Pajak</div>
-                                    <h6 class="fw-semibold fs-2 text-primary mb-1" style="">{{ $purchase->tax ?? '11' }}%</h6>
+                                    <h6 class="fw-semibold fs-2 text-primary mb-1" style="">{{ $receive->purchase->tax ?? '11' }}%</h6>
                                 </div>
                                 <div>
                                     <div class="fw-normal fs-1 text-muted" style="">Total Dengan Pajak</div>
                                     {{-- @php
-                                        dd($purchase->total_price, $purchase->tax, $purchase->tax && (int)$purchase->tax != '0' ? $purchase->tax : 11, ));
+                                        dd($receive->purchase->total_price, $receive->purchase->tax, $receive->purchase->tax && (int)$receive->purchase->tax != '0' ? $receive->purchase->tax : 11, ));
                                     @endphp --}}
                                     <h6 class="fw-semibold fs-2 text-primary mb-1">
                                         {{ 
-                                            (int) $purchase->total_price_taxed && (int) $purchase->total_price_taxed != 0 
-                                                ? formatRupiah($purchase->total_price_taxed) 
-                                                : formatRupiah((int) $purchase->total_price + ((int) $purchase->total_price * (($purchase->tax && (int) $purchase->tax != 0 ? $purchase->tax : 11) / 100)))
+                                            (int) $receive->purchase->total_price_taxed && (int) $receive->purchase->total_price_taxed != 0 
+                                                ? formatRupiah($receive->purchase->total_price_taxed) 
+                                                : formatRupiah((int) $receive->purchase->total_price + ((int) $receive->purchase->total_price * (($receive->purchase->tax && (int) $receive->purchase->tax != 0 ? $receive->purchase->tax : 11) / 100)))
                                         }}
                                     </h6>
                                 </div>
@@ -386,11 +398,11 @@
                                     <div class="badge bg-success-subtle text-success rounded-3 fw-semibold fs-2">
                                         Updated
                                         at
-                                        : {{ $purchase->updated_at }}</div>
+                                        : {{ $receive->purchase->updated_at }}</div>
                                     <div class="badge bg-primary-subtle text-primary rounded-3 fw-semibold fs-2">
                                         Created
                                         at
-                                        : {{ $purchase->created_at }}</div>
+                                        : {{ $receive->purchase->created_at }}</div>
                                 </div>
                             </div>
                         </div>
@@ -476,8 +488,8 @@
                                                                 <select name="purchase_order_id" id="purchase_order_id" class="select2-normal form-select">
                                                                     <option value="">-- Pilih Pembelian --</option>
                                                                     @foreach ($purchases as $purchase)
-                                                                        <option value="{{$purchase->id}}" {{ $purchase->id == old('purchase_order_id', $receive->purchase->id) ? 'selected' : '' }}>
-                                                                            {{ $purchase->code }}
+                                                                        <option value="{{$receive->purchase->id}}" {{ $receive->purchase->id == old('purchase_order_id', $receive->purchase->id) ? 'selected' : '' }}>
+                                                                            {{ $receive->purchase->code }}
                                                                         </option>
                                                                     @endforeach
                                                                 </select>
@@ -530,10 +542,10 @@
                                                         <div class="input-group">
                                                             <span class="input-group-text px-6" id="basic-addon1"><i
                                                                     class="ti ti-align-justified fs-6"></i></span>
-                                                            <textarea class="form-control ps-2" name="description" id="description" cols="20" rows="5"
-                                                                placeholder="Description about this receivement">{{old('description', $receive->description)}}</textarea>
+                                                            <textarea class="form-control ps-2" name="desc" id="desc" cols="20" rows="5"
+                                                                placeholder="Description about this receivement">{{old('desc', $receive->description)}}</textarea>
                                                         </div>
-                                                        @error('description')
+                                                        @error('desc')
                                                             <span class="invalid-feedback" role="alert">
                                                                 {{ $message }}
                                                             </span>
@@ -541,7 +553,7 @@
                                                     </div>
                                                     
                                                     <button type="submit" class="btn btn-primary">
-                                                        Tambah Penerimaan Barang dari Pembelian
+                                                        Perbarui Penerimaan Barang dari Pembelian
                                                     </button>
                                                 </form>
                                             </div>
@@ -558,185 +570,112 @@
             </div>
 
             @php
-                $carts = session()->get('cart_' . $purchase->id, []);
+                $products = $receive->purchase->products;
                 $totalPrice = 0;
             @endphp
             <!-- Form Step 2 -->
             <div class="step-content" data-step="2" style="display: none;">
                 <div class="row">
-                    <div class="col-md-5">
-                        <div>
-                            <form action="{{ url()->current() }}" method="GET" class="w-100">
-                                <input type="hidden" name="hashProduct" value="1">
-                                <div class="row align-items-end mb-3 flex-wrap">
-                                    <div class="col-md-8 mb-2 flex-grow-1">
-                                        <label for="search" class="form-label">Menampilkan Produk {{ $purchase->requestOrder ? 'yang Diminta' : ''}}</label>
-                                        <input type="text" class="form-control" placeholder="Cari Produk"
-                                            name="search" value="{{ $filter->q ?? '' }}">
-                                    </div>
-                                    <div class="col-md-4 mb-2">
-                                        <div class="d-flex align-items-center gap-1">
-                                            <button type="submit" class="btn btn-primary w-100"
-                                                style="white-space: nowrap">Apply</button>
-                                            <a href="{{ url()->current() }}" class="btn btn-secondary"
-                                                style="white-space: nowrap">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em"
-                                                    viewBox="0 0 24 24">
-                                                    <path fill="currentColor"
-                                                        d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2v2a8 8 0 1 0 4.5 1.385V8h-2V2h6v2H18a9.99 9.99 0 0 1 4 8" />
-                                                </svg>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        @php
-                        @endphp
-                        <div class="row">
-                            @foreach ($products as $product)
-                                @php
-                                    if($purchase->requestOrder)
-                                        $product = $product->product;
-                                @endphp
-                                <div class="col-6 mb-2">
-                                    <div class="card rounded-4 h-100 overflow-hidden">
-                                        <div class="card-body p-0 h-100 d-flex flex-column">
-                                            <img src="{{ $product->image ? '/storage/' . $product->image : 'https://placehold.co/160x90?text=' . $product->name }}"
-                                                alt="Image {{ $product->name }}"
-                                                class="d-block w-100 mb-2 bg-primary-subtle"
-                                                style="aspect-ratio:16/9; object-fit:contain;">
-                                            <div class="p-1 h-100 d-flex flex-column justify-content-between px-3">
-                                                <div class="text-decoration-none text-dark fs-3 fw-semibold">
-                                                    {{ $product->name }}</div>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <div><i class="ti ti-arrow-up"></i> {{ $product->height }} cm</div>
-                                                    <div><i class="ti ti-arrow-right"></i> {{ $product->width }} cm</div>
-                                                </div>
-                                                <div class="text-muted fs-2 mb-2">
-                                                    {{ $product->description ?? 'tidak ada deskripsi' }}</div>
-                                                <div class="d-flex mt-auto align-items-center gap-2 mb-3">
-                                                    <button type="submit"
-                                                        class="{{ isset($carts[$product->id]) ? '' : 'd-none' }} fs-3 px-3 w-100 text-center justify-content-center btn-sm btn btn-secondary-subtle rounded-2 d-flex align-items-center gap-2"
-                                                        disabled>
-                                                        <i class="ti ti-package-off"></i>
-                                                        <span class="fs-2" style="white-space: nowrap">Sudah Ada</span>
-                                                    </button>
-                                                    <form action="{{ route('purchase-order.addCart', $purchase->id) }}"
-                                                        method="POST"
-                                                        class="{{ isset($carts[$product->id]) ? 'd-none' : '' }}"
-                                                        style="flex-grow: 1">
-                                                        @csrf
-                                                        <input type="hidden" name="product_id"
-                                                            value="{{ $product->id }}">
-                                                        <button type="submit"
-                                                            class="fs-3 px-3 w-100 text-center justify-content-center btn-sm btn btn-primary rounded-2 d-flex align-items-center gap-2"
-                                                            {{
-                                                                $purchase->requestOrder &&
-                                                                    $purchase->requestOrder->getProcessingAnalytics()[$product->id]['remaining_qty'] == 0
-                                                                ? 'disabled' : ''
-                                                            }}
-                                                            {{ $purchase->status != 0 ? 'disabled' : '' }}
-                                                            >
-                                                            <i class="ti ti-packge-export"></i>
-                                                            <span class="fs-2">
-                                                            {{
-                                                                $purchase->requestOrder &&
-                                                                    $purchase->requestOrder->getProcessingAnalytics()[$product->id]['remaining_qty'] == 0
-                                                                ? 'Sudah Diproses Semua' : 'Pilih'
-                                                            }}
-                                                            </span>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                            @include('partials.paginate',['datas' => $products])
-                        </div>
-                    </div>
-                    <div class="col-lg-7 mb-3 order-first">
+                    <div class="col-12 mb-3 order-first">
                         <div class="d-flex mb-3 align-items-center gap-3">
                             <i class="ti ti-package fs-8"></i>
-                            <h5 class="mb-0">Produk yang diproses</h5>
+                            <h5 class="mb-0">Produk yang diterima</h5>
                             <div class="d-flex align-items-center justify-content-center bg-primary text-white p-2 rounded-circle"
                                 style="aspect-ratio:1/1; width:2.5em; height:2.5em">
-                                {{ count($carts) }}
+                                {{ count($products) }}
                             </div>
                         </div>
-                        <form action="{{ route('purchase-order.product.store', $purchase->id) }}" method="POST"
+                        <form action="{{ route('receive.product.add', $receive->id) }}" method="POST"
                             class="d-block bg-white">
                             @csrf
                             <div class="border border-2 border-dashed border-dark-subtle rounded-4 p-3">
                                 <p class="fs-2"><span class="text-danger">*</span><i>Perubahan tidak disimpan sampai
                                         anda menekan tombol Simpan</i></p>
                                 @php $totalPrice = 0; @endphp
-                                @forelse ($carts as $item)
+                                @forelse ($products as $product)
                                     @php
-                                        $cart = \App\Models\Product::find($item['id']);
-                                        $reqproduct = \App\Models\RequestOrderProduct::where('request_order_id', $purchase->request_order_id)->where('product_id', $item['id'])->first();
-                                        $purproduct = \App\Models\PurchaseOrderProduct::where('purchase_order_id', $purchase->id)->where('product_id', $item['id'])->first();
-                                        $priceBuy = $item['price_buy'] ?? 0; // Harga jual (diambil dari cart)
-                                        $subtotal = $priceBuy * $item['qty']; // Hitung subtotal awal
-                                        $totalPrice += $subtotal;
+                                        $priceBuy = $product->price_buy ?? 0; // Harga jual (diambil dari cart)
+                                        $subtotal = $priceBuy * $product->qty; // Hitung subtotal awal
                                     @endphp
-                                    <div id="cart-item-{{ $item['id'] }}">
+                                    <div id="cart-item-{{ $product->id }}">
                                         <div
                                             class="d-flex align-items-center gap-2 mb-2 {{ $loop->index == 0 ? '' : 'mt-3' }}">
-                                            <img src="{{ $cart->image ? '/storage/' . $cart->image : 'https://placehold.co/300?text=' . $cart->name }}"
-                                                alt="Image Product {{ $cart->name }} in Cart" class="d-block rounded-2"
+                                            <img src="{{ $product->product->image ? '/storage/' . $product->product->image : 'https://placehold.co/300?text=' . $product->product->name }}"
+                                                alt="Image Product {{ $product->product->name }} in Cart" class="d-block rounded-2"
                                                 style="width: 5em; height:5em; object-fit:cover">
                                             <div>
+                                                <div class="mb-1">
+                                                    <div class="d-inline-block p-1 px-2 rounded-2 bg-primary-subtle text-primary fs-2">{{ $product->product->type->type }}</div>
+                                                </div>
                                                 <div class="text-decoration-none text-dark fs-3 fw-semibold">
-                                                    {{ $cart->name }}</div>
+                                                    {{ $product->product->name }}</div>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <div><i class="ti ti-arrow-up"></i> {{ $cart->height }} cm</div>
-                                                    <div><i class="ti ti-arrow-right"></i> {{ $cart->width }} cm</div>
+                                                    <div><i class="ti ti-arrow-up"></i> {{ $product->product->height }} cm</div>
+                                                    <div><i class="ti ti-arrow-right"></i> {{ $product->product->width }} cm</div>
                                                 </div>
                                                 <div class="text-muted fs-2 mb-2">
-                                                    {{ $cart->description ?? 'tidak ada deskripsi' }}</div>
+                                                    {{ $product->product->description ?? 'tidak ada deskripsi' }}</div>
                                             </div>
                                             <div
                                                 class="flex-grow-1 d-flex flex-column align-items-end gap-2 justify-content-between">
                                                 <div class="fs-2 fw-semibold">Sub Total</div>
-                                                <div class="fs-3 fw-bold subtotal" id="subtotal_{{ $item['id'] }}">
+                                                <div class="fs-3 fw-bold subtotal" id="subtotal_{{ $product->id }}">
                                                     {{ formatRupiah($subtotal) }}</div>
                                             </div>
                                         </div>
+
                                         <div class="d-flex align-items-end flex-wrap flex-sm-nowrap gap-2">
                                             <div class="flex-grow-1">
-                                                <label for="qty" class="form-label mb-0 fs-2">Beli Sebanyak
+                                                <label for="qty" class="form-label mb-0 fs-2">Dibeli Sebanyak
                                                     (qty)</label>
                                                 
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <input type="hidden" name="product_id[]"
-                                                        value="{{ $item['id'] }}">
-                                                    <input type="number" name="qty[]" id="qty_{{ $item['id'] }}"
-                                                        class="form-control {{$purchase->requestOrder ? 'form-control-sm' : 'mt-2'}} qty-input"
-                                                        data-id="{{ $item['id'] }}" value="{{ $item['qty'] }}"
-                                                        min="1" {{$purchase->status != 0 ? 'disabled' : ''}} />
+                                                    @if (!($receive->is_lock || $product->remainingReceive <= 0))
+                                                      <input type="hidden" name="product_id[]"
+                                                        value="{{ $product->product->id }}">
+                                                    @endif
+                                                    <input type="number" name="qty[]" id="qty_{{ $product->id }}"
+                                                        class="form-control qty-input"
+                                                        data-id="{{ $product->id }}" value="{{ $product->qty }}"
+                                                        min="1" {{$receive->purchase->status != 0 ? 'disabled' : ''}} />
                                                 </div>
                                             </div>
                                             <div class="flex-grow-1">
                                                 <label for="price_buy" class="form-label mb-0 fs-2">Harga Beli @ qty</label>
-                                                @if($purchase->requestOrder)
-                                                    <div class="fs-2 mb-1 text-muted">Harga Jual : {{ formatRupiah($reqproduct->price_sale) }}</div>
-                                                @endif
                                                 <input type="text" name="price_buy[]"
-                                                    id="price_buy_{{ $item['id'] }}"
-                                                    class="form-control {{$purchase->requestOrder ? 'form-control-sm' : 'mt-2'}} input-rupiah price-sale-input"
-                                                    data-id="{{ $item['id'] }}" value="{{ formatRupiah($priceBuy) }}"
-                                                    min="0" {{$purchase->status != 0 ? 'disabled' : ''}} />
+                                                    id="price_buy_{{ $product->id }}"
+                                                    class="form-control input-rupiah price-sale-input"
+                                                    data-id="{{ $product->id }}" value="{{ formatRupiah($priceBuy) }}"
+                                                    min="0" {{$receive->purchase->status != 0 ? 'disabled' : ''}} />
                                             </div>
+
+                                        </div>
+                                        <div class="d-flex align-items-start gap-2 mt-2">
+                                            @php
+                                                $receiveProduct = $receive->products()->where('purchase_product_id', $product->id)->first();   
+                                            @endphp
+                                            <div class="flex-grow-1">
+                                                <label for="receive_qty" class="form-label mb-0 fs-2">Diterima Sebanyak
+                                                    (qty)</label>
                                                 
-                                            <button class="btn btn-sm btn-danger remove-cart"
-                                                data-url="{{ route('purchase-order.removeCart', $purchase->id) }}"
-                                                data-product-id="{{ $item['id'] }}"
-                                                data-reqorder-id="{{ $purchase->id }}" {{$purchase->status != 0 ? 'disabled' : ''}}>
-                                                <i class="ti ti-trash"></i>
-                                            </button>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    @if (!($receive->is_lock || $product->remainingReceive <= 0))
+                                                      <input type="hidden" name="purchase_product_id[]"
+                                                        value="{{ $product->id }}">
+                                                    @endif
+                                                    <input type="number" name="receive_qty[]" id="receive_qty_{{ $product->id }}"
+                                                        class="form-control qty-input" value="{{ $receiveProduct ? $receiveProduct->receive_qty : 0 }}"
+                                                        placeholder="Sisa {{ $product->remainingReceive }}" max="{{ $product->qty }}"
+                                                        {{ $receive->is_lock || $product->remainingReceive <= 0 ? 'disabled' : '' }} />
+                                                </div>
+                                                <div class="fs-1 text-muted mt-1">Sisa {{ $product->remainingReceive }} qty</div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <label for="receive_qty" class="form-label mb-0 fs-2">Catatan / Keterangan Barang</label>
+                                                <div class="d-flex align-items-center gap-2">
+                                                   <textarea name="description[]" id="description_{{$product->id}}" placeholder="Berikan catatan / keterangan apabila diperlukan" cols="30" rows="3" class="form-control form-control-sm" {{ $receive->is_lock || $product->remainingReceive <= 0 ? 'disabled' : '' }}>{{$receiveProduct ? $receiveProduct->description : ''}}</textarea>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 @empty
@@ -746,29 +685,17 @@
                                     </div>
                                 @endforelse
                                 <div class="pt-3 mt-3 border-top border-2">
-                                    <div class="d-flex align-items-center mb-2 gap-2 justify-content-between">
-                                        <div class="fs-3 fw-semibold">Total</div>
-                                        <div class="fs-4 fw-bold" id="totalPrice">{{ formatRupiah($totalPrice) }}</div>
-                                        <input type="hidden" name="total_price" value="" id="totalPriceInput">
-                                    </div>
-                                    <div class="d-flex align-items-center mb-2 gap-2 justify-content-between">
-                                        <div class="fs-3 fw-semibold" style="white-space: nowrap">Pajak / VAT</div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <input type="number" name="tax" value="{{ old('tax', $purchase->tax ) ?? setting('site.ppn') }}" id="tax" placeholder="0" style="width: 5em;" class="form-control text-center form-control-sm">
-                                            %
+                                    <div class="mb-4">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" name="is_lock" type="checkbox" value="1" id="is_lock" checked {{ $receive->is_lock ? 'disabled' : '' }} />
+                                            <label class="form-check-label" for="is_lock">{{ $receive->is_lock ? 'Penerimaan Dikunci' : 'Kunci Penerimaan (agar tidak bisa diedit)' }}</label>
                                         </div>
                                     </div>
-                                    <div class="d-flex align-items-center gap-2 justify-content-between">
-                                        <div class="fs-3 fw-semibold">Total Termasuk Pajak</div>
-                                        <div class="fs-4 fw-bold" id="totalPriceTaxed">-</div>
-                                        <input type="hidden" name="total_price_taxed" value="" id="totalPriceTaxedInput">
-                                    </div>
                                     <div class="d-flex align-items-center gap-2 mt-2">
-                                        <button type="button" id="refetchBtn" class="btn btn-secondary {{ count($carts) == 0 ? 'd-none' : ''}}"
-                                            title="Muat Ulang Pemrosesan Produk"><i class="ti ti-refresh"></i></button>
-                                        <button type="submit" class="btn btn-primary w-100" {{$purchase->status != 0 ? 'disabled' : ''}}>Simpan dan Lanjut <span class="d-none d-md-inline-block">ke
-                                            Lampiran</span></button>
+                                        <button type="submit" class="btn btn-primary w-100" {{$receive->is_lock ? 'disabled': ''}}>{{ $receive->is_lock ? 'Telah disimpan' : 'Simpan dan Kunci Penerimaan Barang' }}</button>
                                     </div>
+                                    <a href="#bal" class="btn bg-primary-subtle text-primary d-block my-1">Produk diterima ada yang dibungkus menjadi Bal</a>
+                                    <div class="fs-1"><i><span class="text-danger me-2">*</span> Jika diterima dalam bentuk bal, jangan lupa menambahkan Data Bal dan kaitkan ke pesanan ini</i></div>
                                 </div>
                             </div>
                         </form>
@@ -776,6 +703,92 @@
                 </div>
             </div>
 
+            {{-- Form Step 3 --}}
+            <div class="step-content" data-step="3" style="display: none;">
+                <div class="row">
+                    <div class="col-12 mb-3 order-first">
+                        <div class="d-flex mb-3 align-items-center gap-3">
+                            <i class="ti ti-circles fs-8"></i>
+                            <h5 class="mb-0">Diterima dalam Bentuk Bal</h5>
+                            <div class="d-flex align-items-center justify-content-center bg-primary text-white p-2 rounded-circle"
+                                style="aspect-ratio:1/1; width:2.5em; height:2.5em">
+                                {{ count($receive->purchase->bals ?? []) }}
+                            </div>
+
+                            <a href="{{route('bal.add', ['purchase_order' => $receive->purchase->id,'desc' => 'Bal dibuat dari Penerimaan '.$receive->code, 'nowin_id' => $receive->warehouse_id, 'receive' => $receive->id])}}" target="_blank" class="btn btn-primary ms-auto"><i class="ti ti-plus me-2"></i>Tambah</a>
+                        </div>
+                        @forelse ($receive->bals as $bal)
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ $bal->image ? asset('/storage/'.$bal->image) : '/assets/images/profile/user-1.jpg' }}"
+                                            class="rounded-2" alt="product Image {{ $bal->name }}" style="width: 4em" />
+                                        <div class="ms-3">
+                                            <a href="{{route('bal.index', ['search' => $bal->code])}}" target="_blank" class="d-block">
+                                                <div class="badge bg-primary fs-1 mb-1 text-white">{{ $bal->code }}</div>
+                                                <h6 class="fw-semibold mb-1" style="white-space: normal !important">{{ $bal->name }}</h6>
+                                                <div class="fw-normal" style="white-space:normal; font-size:13px; ">{{ $bal->description ?? 'Tidak ada deskripsi'}}</div>    
+                                            </a>
+                                        </div>
+
+                                        <div class="ms-auto">
+                                            @if($bal->is_unpack && $bal->unpack)
+                                                <button type="button"
+                                                    class="dropdown-item fs-2 text-center d-inline-flex p-2 px-3 align-items-center gap-2 bg-secondary text-white rounded-3"
+                                                    data-bs-toggle="modal" data-bs-target="#unpackModal-{{$bal->id}}"><i
+                                                        class="fs-4 ti ti-circles"></i> Detail Pembongkaran</button>
+
+                                                <!-- List Product modal -->
+                                                <div class="modal fade " id="unpackModal-{{$bal->id}}" tabindex="-1"
+                                                    aria-labelledby="vertical-center-modal" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header d-flex align-items-center">
+                                                                <h4 class="modal-title" id="myLargeModalLabel">
+                                                                    Detail Pembongkaran Bal
+                                                                </h4>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                                    aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body pt-0">
+                                                                <img src="{{'/storage/'.$bal->unpack->image}}" target="_blank" class="mb-2 d-block rounded-3 w-full w-100" />
+                                                                <div>
+                                                                    <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Dibongkar Pada</div>
+                                                                    <h6 class="fs-2 fw-semibold text-success mb-1" style="">
+                                                                        {{ \Carbon\Carbon::parse($bal->unpack->updated_at)->format('d F Y H:i:s') }}</h6>
+                                                                </div>
+                                                                <div>
+                                                                    <div class="fw-normal fs-1 text-muted" style="">Pembongkar
+                                                                    </div>
+                                                                    <div class=""><i class="ti ti-user-circle me-2"></i> {{$bal->unpack->user->name}}</div>
+                                                                </div>
+                                                                <div>
+                                                                    <div class="fw-normal fs-1 text-muted" style="">Deskripsi
+                                                                    </div>
+                                                                    <div class="fs-3">{{$bal->unpack->description}}</div>
+                                                                </div>
+                                                                <div class="mt-3 d-flex gap-2 justify-content-center align-items-center">
+                                                                    <a href="{{route('bal.unpack.edit', ['id' => $bal->id, 'unpack_id' => $bal->unpack->id])}}" class="btn w-100 w-full btn-secondary"><i class="ti ti-edit me-1"></i> Edit</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <a href="{{route('bal.unpack.add', $bal->id)}}" class="btn btn-primary-subtle bg-primary-subtle btn-sm d-block">Bongkar</a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-5 rounded-3 bg-light text-center border-2 border-dashed">
+                                Belum ada Bal yang ditambahkan untuk Pemesanan {{ $receive->purchase->code }}
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
         </div>
         
     </div>
@@ -784,11 +797,17 @@
     <script src="{{ env('APP_URL') }}/assets/libs/select2/dist/js/select2.full.min.js"></script>
     <script src="{{ env('APP_URL') }}/assets/libs/select2/dist/js/select2.min.js"></script>
     <script>
+        document.getElementById('receiveForm').addEventListener('submit', function () {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('loadingState').style.display = 'block';
+        });
+    </script>
+    <script>
         $(document).ready(function() {
             const stepMap = {
                 'data': 1,
                 'produk': 2,
-                'review': 3,
+                'bal': 3,
             };
 
             function updateStepFromHash() {
@@ -884,9 +903,9 @@
 
             $('#refetchBtn').on('click', function(e) {
                 e.preventDefault();
-                let id = "{{ $purchase->id }}"
+                let id = "{{ $receive->purchase->id }}"
                 $.ajax({
-                    url: "{{ route('purchase-order.refetch', $purchase->id) }}",
+                    url: "{{ route('purchase-order.refetch', $receive->purchase->id) }}",
                     method: 'POST',
                     data: {
                         _token: "{{ csrf_token() }}",

@@ -621,6 +621,9 @@
                                                 class="d-block w-100 mb-2 bg-primary-subtle"
                                                 style="aspect-ratio:16/9; object-fit:contain;">
                                             <div class="p-1 h-100 d-flex flex-column justify-content-between px-3">
+                                                <div class="mb-1">
+                                                    <div class="d-inline-block p-1 px-2 rounded-2 bg-primary-subtle text-primary fs-2">{{ $product->type->type }}</div>
+                                                </div>
                                                 <div class="text-decoration-none text-dark fs-3 fw-semibold">
                                                     {{ $product->name }}</div>
                                                 <div class="d-flex align-items-center gap-2">
@@ -634,17 +637,18 @@
                                                         class="{{ isset($carts[$product->id]) ? '' : 'd-none' }} fs-3 px-3 w-100 text-center justify-content-center btn-sm btn btn-secondary-subtle rounded-2 d-flex align-items-center gap-2"
                                                         disabled>
                                                         <i class="ti ti-package-off"></i>
-                                                        <span class="fs-2" style="white-space: nowrap">Sudah Ada</span>
+                                                        <span class="fs-2 w-100" style="white-space: nowrap">Sudah Ada</span>
                                                     </button>
                                                     <form action="{{ route('purchase-order.addCart', $purchase->id) }}"
                                                         method="POST"
                                                         class="{{ isset($carts[$product->id]) ? 'd-none' : '' }}"
-                                                        style="flex-grow: 1">
+                                                        style="flex-grow: 1; width:100%">
                                                         @csrf
                                                         <input type="hidden" name="product_id"
                                                             value="{{ $product->id }}">
                                                         <button type="submit"
                                                             class="fs-3 px-3 w-100 text-center justify-content-center btn-sm btn btn-primary rounded-2 d-flex align-items-center gap-2"
+                                                            style="width: 100%;"
                                                             {{
                                                                 $purchase->requestOrder &&
                                                                     $purchase->requestOrder->getProcessingAnalytics()[$product->id]['remaining_qty'] == 0
@@ -690,7 +694,6 @@
                                 @forelse ($carts as $item)
                                     @php
                                         $cart = \App\Models\Product::find($item['id']);
-                                        $reqproduct = \App\Models\RequestOrderProduct::where('request_order_id', $purchase->request_order_id)->where('product_id', $item['id'])->first();
                                         $purproduct = \App\Models\PurchaseOrderProduct::where('purchase_order_id', $purchase->id)->where('product_id', $item['id'])->first();
                                         $priceBuy = $item['price_buy'] ?? 0; // Harga jual (diambil dari cart)
                                         $subtotal = $priceBuy * $item['qty']; // Hitung subtotal awal
@@ -703,6 +706,9 @@
                                                 alt="Image Product {{ $cart->name }} in Cart" class="d-block rounded-2"
                                                 style="width: 5em; height:5em; object-fit:cover">
                                             <div>
+                                                <div class="mb-1">
+                                                    <div class="d-inline-block p-1 px-2 rounded-2 bg-primary-subtle text-primary fs-1">{{ $cart->type->type }}</div>
+                                                </div>
                                                 <div class="text-decoration-none text-dark fs-3 fw-semibold">
                                                     {{ $cart->name }}</div>
                                                 <div class="d-flex align-items-center gap-2">
@@ -728,19 +734,17 @@
                                                     <input type="hidden" name="product_id[]"
                                                         value="{{ $item['id'] }}">
                                                     <input type="number" name="qty[]" id="qty_{{ $item['id'] }}"
-                                                        class="form-control {{$purchase->requestOrder ? 'form-control-sm' : 'mt-2'}} qty-input"
+                                                        class="form-control qty-input"
                                                         data-id="{{ $item['id'] }}" value="{{ $item['qty'] }}"
                                                         min="1" {{$purchase->status != 0 ? 'disabled' : ''}} />
                                                 </div>
                                             </div>
                                             <div class="flex-grow-1">
                                                 <label for="price_buy" class="form-label mb-0 fs-2">Harga Beli @ qty</label>
-                                                @if($purchase->requestOrder)
-                                                    <div class="fs-2 mb-1 text-muted">Harga Jual : {{ formatRupiah($reqproduct->price_sale) }}</div>
-                                                @endif
+                                                <div class="fs-2 mb-1 fw-semibold text-muted">Harga Jual : {{ formatRupiah($cart->price_per_unit)." / {$cart->unit->code}" }}</div>
                                                 <input type="text" name="price_buy[]"
                                                     id="price_buy_{{ $item['id'] }}"
-                                                    class="form-control {{$purchase->requestOrder ? 'form-control-sm' : 'mt-2'}} input-rupiah price-sale-input"
+                                                    class="form-control input-rupiah price-sale-input"
                                                     data-id="{{ $item['id'] }}" value="{{ formatRupiah($priceBuy) }}"
                                                     min="0" {{$purchase->status != 0 ? 'disabled' : ''}} />
                                             </div>

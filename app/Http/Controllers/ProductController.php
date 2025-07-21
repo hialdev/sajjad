@@ -70,6 +70,12 @@ class ProductController extends Controller
         return view('products.edit', compact('product', 'product_types', 'units'));
     }
 
+    public function stock($id){
+        $product = Product::find($id);
+        // dd($product->warehouses());
+        return view('products.stock', compact('product'));
+    }
+
     public function update($id, Request $request){
         $request->merge(['price_per_unit' => parseRupiah($request->get('price_per_unit'))]);
         $request->validate([
@@ -119,4 +125,65 @@ class ProductController extends Controller
             return redirect()->back()->withInput()->with('error', 'Gagal menghapus Product, Error: '.$e->getMessage());
         }
     }
+
+   public function qtyStockByLength(Request $request)
+   {
+      $request->validate([
+         'product_id' => 'required|uuid|exists:osano.products,id',
+         'length' => 'nullable|numeric|min:1',
+         'store_id' => 'nullable|uuid|exists:osano.stores,id', // jika tidak pakai partner
+      ]);
+
+      $storeId = $request->get('store_id');
+      $product = Product::with('type')->findOrFail($request->product_id);
+
+      // Jika produk bertipe "meteran"
+      if ($product->type->type === 'meteran') {
+         if (!$request->filled('length')) {
+               return response()->json([
+                  'success' => false,
+                  'message' => 'Panjang (length) harus diisi untuk produk meteran'
+               ], 422);
+         }
+
+         $stocks = null;
+         if($request->filled('store_id')){
+            $stocks = $product->findMeterStockByLength($request->length, 'store', $request->get('store_id'));
+         }else{
+            $stocks = $product->findMeterStockByLength($request->length);
+         }
+
+         $totalQty = $stocks->count();
+         $totalLength = $stocks->sum(fn($s) => $s->length - $s->sold_length);
+
+         return response()->json([
+               'success' => true,
+               'qty' => $totalQty,
+               'length_available' => $totalLength,
+         ]);
+      }
+
+      // Jika produk bukan meteran, maka ambil dari stok biasa
+      if (!$request->filled('store_id')) {
+         return response()->json([
+               'success' => false,
+               'message' => 'Store belum dipilih untuk produk non-meteran'
+         ], 422);
+      }
+
+      $stockResult = \App\Models\Stock::analyticProductInLocation('store', $storeId, $product->id)->first();
+
+      if (!$stockResult) {
+         return response()->json([
+               'success' => true,
+               'qty' => 0,
+         ]);
+      }
+
+      return response()->json([
+         'success' => true,
+         'qty' => $stockResult->stock_remaining,
+      ]);
+   }
+
 }

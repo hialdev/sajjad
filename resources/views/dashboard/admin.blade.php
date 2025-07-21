@@ -127,14 +127,14 @@
     <section>
         <!--  Owl carousel -->
         <div class="owl-carousel counter-carousel owl-theme">
-        @php
-            $classArrays = [
-                'bg-primary-subtle text-primary',
-                'bg-secondary-subtle',
-                'bg-info-subtle',
-            ];
-        @endphp
-        {{-- {{(string) $classArrays[$loop->index]}} --}}
+            @php
+                $classArrays = [
+                    'bg-primary-subtle text-primary',
+                    'bg-secondary-subtle',
+                    'bg-info-subtle',
+                ];
+            @endphp
+            {{-- {{(string) $classArrays[$loop->index]}} --}}
             @forelse (auth()->user()->applications() as $app)
             <div class="item">
                 <a href="{{urlApp($app->code)}}" class="card zoom-in {{$app->url == url()->current() ? 'bg-danger-subtle shadow-md' : 'bg-primary-subtle text-primary shadow-none'}}" target="_blank" style="aspect-ratio:1/1 !important">

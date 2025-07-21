@@ -15,8 +15,9 @@ return new class extends Migration
     {
         Schema::connection('osano')->create('bals', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('product_type_id');
-            $table->uuid('purchase_order_id')->nullable();
+            $table->enum('nowin_type', ['warehouse', 'store']);
+            $table->uuid('nowin_id')->nullable();
+            $table->uuid('purchase_receive_id')->nullable();
 
             $table->string('code');
             $table->string('name');
@@ -26,14 +27,9 @@ return new class extends Migration
             
             $table->timestamps();
 
-            $table->foreign('product_type_id')
+            $table->foreign('purchase_receive_id')
                 ->references('id')
-                ->on('product_types')
-                ->onDelete('restrict');
-
-            $table->foreign('purchase_order_id')
-                ->references('id')
-                ->on('purchase_orders')
+                ->on('purchase_receives')
                 ->onDelete('restrict');
         });
     }

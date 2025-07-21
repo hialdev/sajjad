@@ -95,8 +95,16 @@ class Transport extends Model
         return $this->hasOne(PurchaseOrder::class, 'transport_id');
     }
 
+    public function requestProcess(){
+        return $this->hasOne(RequestProcess::class, 'transport_id');
+    }
+
     public function invoice(){
         return $this->hasOne(TransportInvoice::class, 'transport_id');
+    }
+
+    public function distribution(){
+        return $this->hasOne(StockMovement::class, 'transport_id');
     }
     
 }

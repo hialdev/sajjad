@@ -10,10 +10,14 @@ use App\Models\PurchaseOrderInvoice;
 use App\Models\PurchaseReceive;
 use App\Models\RequestOrder;
 use App\Models\RequestOrderInvoice;
+use App\Models\Stock;
+use App\Models\StockMeter;
 use App\Models\Transport;
 use App\Models\TransportInvoice;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Models\WarehouseStock;
+use App\Models\WarehouseStockMeter;
 use Illuminate\Http\Request;
 
 class PurchaseReceiveController extends Controller
@@ -29,6 +33,28 @@ class PurchaseReceiveController extends Controller
                                 ->get();
 
         return view('purchase_orders.receive.index', compact('receives', 'filter'));
+    }
+
+    public function products($id){
+        $purchaseReceive = PurchaseReceive::whereHas('purchase.products.product.type', function ($q) {
+                $q->where('type', 'satuan');
+            })
+            ->with(['purchase.products.product.type'])
+            ->where('id', $id)
+            ->firstOrFail();
+        return response()->json($purchaseReceive->purchase->products->map(function ($product) use ($purchaseReceive) {
+            return [
+                'id' => $product->id,
+                'product_id' => $product->product->id,
+                'image' => $product->product->image ? asset('/storage/'.$product->product->image) : '/assets/images/profile/user-1.jpg',
+                'type' => $product->product->type->type,
+                'name' => $product->product->name,
+                'height' => $product->product->height,
+                'width' => $product->product->width,
+                'qty' => $product->availableQtyBale($purchaseReceive->id),
+                'price_buy' => $product->price_buy,
+            ];
+        }));
     }
 
     public function add(){
@@ -61,9 +87,9 @@ class PurchaseReceiveController extends Controller
             $receive->description = $request->get('description');
             $receive->save();
 
-            return redirect()->route('receive.setting', $receive->id)->with('success', 'Penerimaan Barang dengan Kode '.$receive->code.' berhasil ditambahkan. Selanjutnya Kelola Barang yang diterima.');
+            return redirect()->route('receive.setting', $receive->id)->with('success', 'Penerimaan Barang dengan Kode '.$receive->code.' berhasil ditambahkan. Selanjutnya Kelola Barang yang diterima.')->with('redirect_hash', 'produk');
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Gagal menambahkan Product, Error: '.$e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Gagal menambahkan Penerimaan Barang, Error: '.$e->getMessage());
         }
     }
 
@@ -79,10 +105,6 @@ class PurchaseReceiveController extends Controller
         ];
         $products = Product::where('name', 'LIKE', "%{$filter->q}%")->orderBy('name')->paginate((int) setting('site.product-limit') ?? 6);
 
-        if(count(session()->get('receive_cart_'.$id, [])) == 0){
-            $this->refetch($id, new Request());
-        }
-
         if ($request->filled('hashProduct')) {
             session(['redirect_hash' => 'produk']);
         }
@@ -92,151 +114,61 @@ class PurchaseReceiveController extends Controller
     }
 
     public function update($id, Request $request){
-        $purchase = PurchaseOrder::find($id);
         $request->validate([
+            'image' => 'nullable|image|mimes:webp,png,jpg,jpeg,jfif,svg|max:2048',
             'date' => 'required|date',
-            'principal_id' => 'required|string|exists:osano.principals,id',
-            'principal_pic_id' => 'required|string|exists:osano.principal_pics,id',
-            'warehouse_id' => 'nullable|string|exists:osano.warehouses,id',
-            'transport_id' => 'nullable|string|exists:osano.transports,id|unique:osano.purchase_orders,transport_id',
-            'pickup_address_id' => 'nullable|string|exists:osano.principal_addresses,id',
-            'is_handle_logistic' => 'nullable|boolean',
-            'description' => 'nullable|string|min:4',
+            'warehouse_id' => 'required|string|exists:osano.warehouses,id',
+            'purchase_order_id' => 'required|string|exists:osano.purchase_orders,id',
+            'user_id' => 'required|string|exists:users,id',
+            'description' => 'nullable|string',
         ]);
         try {
-            if($purchase->status != '0'){
-                return redirect()->back()->withInput()->with('error', 'Gagal memperbarui Pembelian ke Principal, Error: Status tidak diizinkan untuk diperbarui');
-            }
-            $purchase->date = $request->get('date');
-            $purchase->principal_id = $request->get('principal_id');
-            $purchase->principal_pic_id = $request->get('principal_pic_id');
-            $purchase->transport_id = $request->get('transport_id');
-            $purchase->pickup_address_id = $request->get('pickup_address_id');
-            $purchase->warehouse_id = $request->get('warehouse_id');
-            $purchase->is_handle_logistic = $request->get('is_handle_logistic') ?? '0';
-            $purchase->description = $request->get('description');
-            $purchase->save();
+            $receive = PurchaseReceive::findOrFail($id);
+            if($receive->is_lock) return redirect()->back()->with('error', 'Gagal memperbarui, Data Penerimaan sudah dikunci!');
 
-            return redirect()->route('purchase-order.setting', ['id' => $purchase->id])->with('success', 'Pembelian ke Principal '.$purchase->name.' berhasil diperbarui.');
+            if ($request->hasFile('image')) {
+                if ($receive->image && file_exists(storage_path('app/public/' . $receive->image))) {
+                    unlink(storage_path('app/public/' . $receive->image));
+                }
+                $imagePath = $request->file('image')->store('purchase_receives', 'public');
+                $receive->image = $imagePath;
+            }
+            $receive->date = $request->get('date');
+            $receive->warehouse_id = $request->get('warehouse_id');
+            $receive->purchase_order_id = $request->get('purchase_order_id');
+            $receive->user_id = $request->get('user_id');
+            $receive->description = $request->get('description');
+            $receive->save();
+
+            return redirect()->route('receive.setting', $receive->id)->with('success', 'Penerimaan Barang dengan Kode '.$receive->code.' berhasil diperbarui.');
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui Pembelian ke Principal, Error: '.$e->getMessage());
-        }
-    }
-
-    public function addCart($id, Request $request)
-    {
-        $purchase = PurchaseOrder::find($id);
-        if($purchase->status != '0') return redirect()->back()->with('error', 'Pembelian telah diproses, perubahan tidak diizinkan')->with('redirect_hash', 'produk');
-
-        $request->validate([
-            'product_id' => 'required|exists:osano.products,id',
-        ]);
-
-        $cart = session()->get("cart_".$id, []);
-
-        if (isset($cart[$request->get('product_id')])) {
-            // Jika produk sudah ada di cart, tambahkan jumlahnya
-            $cart[$request->get('product_id')]['qty'] += $request->get('qty', 1);
-        } else {
-            // Jika produk belum ada di cart, tambahkan dengan qty default 1
-            $cart[$request->get('product_id')] = [
-                'id' => $request->get('product_id'),
-                'qty' => 1,
-                'price_buy' => 0,
-                'pack_id' => '',
-            ];
-        }
-
-        session()->put('receive_cart_'.$id, $cart);
-
-        return redirect()->back()->with('success', 'Produk berhasil ditambahkan ke keranjang')->with('redirect_hash', 'produk');
-    }
-
-    public function removeCart($id, Request $request)
-    {
-        $purchase = PurchaseOrder::find($id);
-        if($purchase->status != '0') return redirect()->back()->with('error', 'Pembelian telah diproses, perubahan tidak diizinkan')->with('redirect_hash', 'produk');
-
-        $request->validate([
-            'product_id' => 'required|exists:osano.products,id',
-        ]);
-
-        $cart = session()->get("cart_".$id, []);
-
-        if (isset($cart[$request->get('product_id')])) {
-            unset($cart[$request->get('product_id')]);
-            session()->put("cart_".$id, $cart);
-        }
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Produk berhasil dihapus dari keranjang',
-            ], 200);
-        }
-
-        return redirect()->back()->with('success', 'Produk berhasil dihapus dari keranjang')->with('redirect_hash', 'produk');
-    }
-
-    // Refill Cart Session by Request Order Product
-    public function refetch($id, Request $request){
-        $receive = PurchaseReceive::find($id);
-        $purchase = $receive->purchase;
-        session()->forget('receive_cart_'.$id);
-        $cart = [];
-        if($purchase->products){
-            foreach ($purchase->products as $purchaseproduct) {
-                $cart[$purchaseproduct->product_id] = [
-                    'id' => $purchaseproduct->product_id,
-                    'qty' => $purchaseproduct->qty,
-                    'price_buy' => $purchaseproduct->price_buy,
-                    'pack_id' => $purchaseproduct->pack_id,
-                ];
-            }
-        }
-        session()->put('receive_cart_'.$id, $cart);
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Mereset Ulang dengan data Produk Pembelian ke Principal',
-            ], 200);
+            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui Penerimaan barang, Error: '.$e->getMessage());
         }
     }
 
     public function process($id, Request $request){
         try {
-            $purchase = PurchaseOrder::find($id);
-            if($purchase->status == '0' && $purchase->requestOrder && !$purchase->requestOrder->isStillRemain())
-                return redirect()->back()->with('error', 'Gagal memproses Pembelian, Sesuaikan qty produk yang di proses dengan sisa yang belum diproses!.');
-            if($purchase->products->count() == 0)
-                return redirect()->back()->with('error', 'Gagal memproses Pembelian, Tidak ada produk yang diproses!.');
+            $receive = PurchaseReceive::find($id);
+            if($receive->products->count() < 1) return redirect()->back()->with('error', 'Gagal memproses karena Tidak ada data produk yang diterima!');
+            if($receive->is_stocked) return redirect()->back()->with('error', 'Gagal memproses karena Penerimaan ini telah dimasukan kedalam Stock!');
 
-            if($purchase->status == 0){
-                $purchase->status = (string) 1;
-            }else if($purchase->status == 1){
-                $purchase->status = (string) 2;
-            }else{
-                return redirect()->back()->with('error', 'Tidak ada proses selanjutnya.');
+            $this->addToStock($id);
+            
+            if (!$receive->is_lock) {
+                $receive->is_lock = 1;
             }
-            $purchase->save();
+            $receive->is_stocked = 1;
+            $receive->save();
 
-            if( $purchase->is_handle_logistic ){
-                $transport = $purchase->transport;
-                $transport->status = $purchase->status;
-                $transport->save();
+            $purchase = $receive->purchase;
+            if ($purchase->status != '2' && $purchase->isFullyReceived()){
+                $purchase->status = '2';
+                $purchase->save();
             }
 
-            if ($purchase->requestOrder){
-                $reqOrder = $purchase->requestOrder;
-                $reqOrder->status = $reqOrder->isFinished() ? '2' : '1';
-                $reqOrder->save();
-            }
-
-
-            return redirect()->back()->with('success', 'Berhasil '.($purchase->status == 1 ? 'Selesaikan' : 'Proses').' Pembelian ke Principal dengan Kode '.$purchase->code.'.');
+            return redirect()->back()->with('success', 'Berhasil menyelesaikan Pemesanan dan Penerimaan. Stock juga telah ditambahkan ke Gudang '.$receive->purchase->warehouse->name);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal memproses / selesaikan Pembelian ke Principal, Error: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menyelesaikan Pemesanan dan Penerimaan, Error: '.$e->getMessage());
         }
     }
 
@@ -308,6 +240,46 @@ class PurchaseReceiveController extends Controller
             return redirect()->route('purchase-order.index')->with('success', 'Pembelian ke Principal '.$purchase->code.' berhasil dihapus.');
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', 'Gagal menghapus Pembelian ke Principal, Error: '.$e->getMessage());
+        }
+    }
+
+    // ------------------------------
+    private function addToStock($receiveId){ 
+        $receive = PurchaseReceive::find($receiveId);
+        if (!$receive) return;
+
+        $products = $receive->products;
+        foreach ($products as $prd) {
+            $product = $prd->purchaseProduct->product;
+            $type = $product->type->type;
+
+            if($type == 'satuan') {
+                $this->stockSatuan($receive, $product, $prd->receive_qty);
+            }else if($type == 'meteran') {
+                $this->stockMeteran($receive, $product, $prd->receive_qty);
+            }else { return false; }
+        }
+    }
+
+    private function stockSatuan($receive, $product, $qty){
+        $stock = new Stock();
+        $stock->nowin_type = 'warehouse';
+        $stock->nowin_id = $receive->warehouse_id;
+        $stock->product_id = $product->id;
+        $stock->qty = $qty;
+        $stock->trx_type = 'in'; //in, onway, out
+        $stock->save();
+    }
+
+    private function stockMeteran($receive, $product, $qty){
+        for ($i=0; $i < $qty; $i++) { 
+            $stockMeter = new StockMeter();
+            $stockMeter->product_id = $product->id;
+            $stockMeter->nowin_type = 'warehouse';
+            $stockMeter->nowin_id = $receive->warehouse_id;
+            $stockMeter->length = $product->width;
+            $stockMeter->sold_length = 0;
+            $stockMeter->save();
         }
     }
 }

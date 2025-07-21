@@ -80,6 +80,9 @@
                                 <h6 class="fs-3 fw-semibold mb-0">Deskripsi</h6>
                             </th>
                             <th>
+                                <h6 class="fs-3 fw-semibold mb-0">Stock</h6>
+                            </th>
+                            <th>
                                 <h6 class="fs-3 fw-semibold mb-0">Satuan</h6>
                             </th>
                             <th>
@@ -112,6 +115,12 @@
                                     <div class="fw-normal" style="white-space:normal; font-size:13px; ">{{ $product->description ?? 'Tidak ada deskripsi'}}</div>    
                                 </td>
                                 <td>
+                                    <div class="fw-bold text-primary">{{ $product->stock_count }}</div>
+                                    <div class="fs-1 text-muted">Tersebar di</div>
+                                    <div><i class="ti ti-building-warehouse me-2"></i> {{ $product->warehouse_count }}</div>
+                                    <div><i class="ti ti-building-store me-2"></i> {{ $product->store_count }}</div>
+                                </td>
+                                <td>
                                     <div class="badge bg-secondary rounded-3 fw-semibold fs-2">
                                         {{ $product->unit ? $product->unit->name.' ('.$product->unit->code.')' : 'Satuan / unit belum ditentukan'}}</div>
                                 </td>
@@ -136,8 +145,8 @@
                                         </a>
                                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                             <li>
-                                                <a href="{{route('product.index', $product->stock?->id)}}" class="dropdown-item d-flex align-items-center gap-3"><i
-                                                        class="fs-4 ti ti-eye"></i>View</a>
+                                                <a href="{{route('product.stock', $product->id)}}" class="dropdown-item d-flex align-items-center gap-3 bg-primary text-white"><i
+                                                        class="fs-4 ti ti-eye"></i>Sebaran Stock</a>
                                             </li>
                                             <li>
                                                 <a href="{{route('product.edit', $product->id)}}" class="dropdown-item d-flex align-items-center gap-3"><i

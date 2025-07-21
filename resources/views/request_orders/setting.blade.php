@@ -94,7 +94,7 @@
                     '2' => ['label' => 'Selesai','color' => 'success'],
                 ];    
                 @endphp
-                <a href="{{ route('purchase-order.add', ['reqid' => $reqorder->id]) }}" class="btn btn-primary {{$reqorder->status == '2' ? 'd-none' : ''}}"><i class="ti ti-building-factory me-1"></i> <span class="d-none d-sm-inline-block">Proses</span></a>
+                <a href="{{ route('request-process.add', ['reqorder_id' => $reqorder->id]) }}" class="btn btn-primary {{$reqorder->status == '2' ? 'd-none' : ''}}"><i class="ti ti-atom-2 me-1"></i><span class="d-none d-sm-inline-block">Proses</span></a>
                 @if($reqorder->status == '2' && !$reqorder->invoice)
                 <button data-bs-toggle="modal" data-bs-target="#generateInvoiceModal-{{$reqorder->id}}" class="btn btn-secondary" style=""><i class="ti ti-file-invoice"></i> Buat Invoice</button>
                 @endif
@@ -150,7 +150,7 @@
                     </div>
                     <div class="step" data-step="4">
                         <div class="circle">4</div>
-                        <div class="label fs-2">Proses <span class="d-none d-sm-block">Permintaan</span></div>
+                        <div class="label fs-2"> Proses</div>
                         <div class="line"></div>
                     </div>
                     <div class="step" data-step="5">
@@ -161,7 +161,7 @@
             </div>
             <div class="col-6 col-md-3 mb-4 d-flex justify-content-end align-items-start gap-2">
                 <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRequestOrder-{{$reqorder->id}}"><i class="ti ti-trash"></i> <span class="ms-1 d-none d-md-inline-block">Hapus</span></button>
-                <a href="#" class="btn btn-danger" style="background:rgb(186, 55, 55); border-color:rgb(186, 55, 55)"><i class="ti ti-printer"></i></a>
+                <a href="{{route('request-order.getInvoice', ['id' => $reqorder->invoice->id])}}" class="btn btn-danger" style="background:rgb(186, 55, 55); border-color:rgb(186, 55, 55)"><i class="ti ti-printer"></i></a>
             </div>
 
             <!-- Delete Modal -->
@@ -297,35 +297,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="p-3 border border-2 rounded-3 border-dashed">
-                                <div class="d-flex align-items-center gap-3 justify-content-between" style="cursor: pointer">
-                                    <div>
-                                        <h6 class="fw-semibold text-dark mb-1" style="">Statistik Pemrosesan Produk</h6>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                @foreach ($reqorder->getProcessingAnalytics() as $analytic)
-                                <div class="col-md-4 py-2 mt-2">
-                                    <div class=""><i class="ti ti-package me-2"></i> {{\App\Models\Product::find($analytic['product_id'])->name}}</div>
-                                    <hr>
-                                    <div class="d-flex align-items-center justify-content-around gap-3">
-                                        <div class="d-flex align-items-center gap-2 text-secondary"><i class="ti ti-clock"></i> <span class="text-dark fw-bold fs-2">{{ $analytic['remaining_qty'] }}</span></div>
-                                        <div class="d-flex align-items-center gap-2 text-warning"><i class="ti ti-truck-delivery"></i> <span class="text-dark fw-bold fs-2">{{ $analytic['processed_qty'] }}</span></div>
-                                        <div class="d-flex align-items-center gap-2 text-success"><i class="ti ti-check"></i> <span class="text-dark fw-bold fs-2">{{ $analytic['finished_qty'] }}</span></div>
-                                    </div>
-                                    <div class="progress my-2" style="height: 10px">
-                                        <div class="progress-bar text-bg-primary" style="width: {{$analytic['percentage']}}%" role="progressbar">
-                                            {{$analytic['processed_qty']}} / {{$analytic['requested_qty']}}
-                                        </div>
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
+                    
                 </div>
 
                 <div class="row d-none" id="editDataBox">
@@ -512,39 +484,6 @@
             <div class="step-content" data-step="2" style="display: none;">
                 <div class="row">
                     <div class="col-md-7">
-                        
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="btn-accordion p-3 border border-2 rounded-3 border-dashed">
-                                    <div class="d-flex align-items-center gap-3 justify-content-between" style="cursor: pointer">
-                                        <div>
-                                            <h6 class="fw-semibold text-dark mb-1" style="">Statistik Pemrosesan Produk</h6>
-                                        </div>
-                                        <div class="flex-grow-1 text-end">
-                                            <div class="fs-1 text-muted">Klik untuk melihat detail</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row btn-accordion-content mt-3">
-                                @foreach ($reqorder->getProcessingAnalytics() as $analytic)
-                                    <div class="col-md-4 py-2">
-                                        <div class=""><i class="ti ti-package me-2"></i> {{\App\Models\Product::find($analytic['product_id'])->name}}</div>
-                                        <div class="progress my-2" style="height: 10px">
-                                            <div class="progress-bar text-bg-primary" style="width: {{$analytic['percentage']}}%" role="progressbar">
-                                            {{$analytic['processed_qty']}} / {{$analytic['requested_qty']}}
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center justify-content-around gap-3">
-                                            <div class="d-flex align-items-center gap-2 text-secondary"><i class="ti ti-clock"></i> <span class="text-dark fw-bold fs-2">{{ $analytic['remaining_qty'] }}</span></div>
-                                            <div class="d-flex align-items-center gap-2 text-warning"><i class="ti ti-truck-delivery"></i> <span class="text-dark fw-bold fs-2">{{ $analytic['processed_qty'] }}</span></div>
-                                            <div class="d-flex align-items-center gap-2 text-success"><i class="ti ti-check"></i> <span class="text-dark fw-bold fs-2">{{ $analytic['finished_qty'] }}</span></div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                                </div>
-                            </div>
-                        </div>
-
                         <div>
                             <form action="{{ url()->current() }}" method="GET" class="w-100">
                                 <input type="hidden" name="hashProduct" value="1">
@@ -573,7 +512,7 @@
                         </div>
                         <div class="row">
                             @foreach ($products as $product)
-                                <div class="col-6 col-md-4 mb-2">
+                                <div class="col-12 col-sm-6 col-md-4 mb-2">
                                     <div class="card rounded-4 h-100 overflow-hidden">
                                         <div class="card-body p-0 h-100 d-flex flex-column">
                                             <img src="{{ $product->image ? '/storage/' . $product->image : 'https://placehold.co/160x90?text=' . $product->name }}"
@@ -581,10 +520,23 @@
                                                 class="d-block w-100 mb-2 bg-primary-subtle"
                                                 style="aspect-ratio:16/9; object-fit:contain;">
                                             <div class="p-1 h-100 d-flex flex-column justify-content-between px-3">
+                                                <div class="mb-1">
+                                                    <div class="d-inline-block p-1 px-2 rounded-2 bg-primary-subtle text-primary fs-2">{{ $product->type->type }}</div>
+                                                </div>
                                                 <div class="text-decoration-none text-dark fs-3 fw-semibold">
                                                     {{ $product->name }}</div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div><i class="ti ti-arrow-up"></i> {{ $product->height }} cm</div>
+                                                    <div><i class="ti ti-arrow-right"></i> {{ $product->width }} cm</div>
+                                                </div>
                                                 <div class="text-muted fs-2 mb-2">
                                                     {{ $product->description ?? 'tidak ada deskripsi' }}</div>
+                                                
+                                                @if ($product->type->type == "meteran")
+                                                <div class="fs-2 fw-bold mt-1 text-muted"><i class="ti ti-clock"></i> Tersisa {{ $product->stock_count }} qty panjang utuh (qty berubah seiring inputan panjang)</div>
+                                                @else
+                                                <div class="fs-2 fw-bold mt-1 text-muted"><i class="ti ti-clock"></i> Tersisa {{ $product->stock_count }} qty</div>
+                                                @endif
                                                 <div class="d-flex mt-auto align-items-center gap-2 mb-3">
                                                     <button type="submit"
                                                         class="{{ isset($carts[$product->id]) ? '' : 'd-none' }} fs-3 px-3 w-100 text-center justify-content-center btn-sm btn btn-secondary-subtle rounded-2 d-flex align-items-center gap-2"
@@ -635,19 +587,27 @@
                                 @forelse ($carts as $item)
                                     @php
                                         $cart = \App\Models\Product::find($item['id']);
+                                        $reqproduct = \App\Models\RequestOrderProduct::where('request_order_id', $reqorder->id)->where('product_id', $item['id'])->first();
                                         $priceSale = $item['price_sale'] ?? 0; // Harga jual (diambil dari cart)
                                         $subtotal = $priceSale * $item['qty']; // Hitung subtotal awal
                                         $totalPrice += $subtotal;
                                     @endphp
                                     <div id="cart-item-{{ $item['id'] }}">
                                         <div
-                                            class="d-flex align-items-center gap-2 mb-2 {{ $loop->index == 0 ? '' : 'mt-3' }}">
+                                            class="d-flex flex-wrap align-items-center gap-2 mb-2 {{ $loop->index == 0 ? '' : 'mt-3' }}">
                                             <img src="{{ $cart->image ? '/storage/' . $cart->image : 'https://placehold.co/300?text=' . $cart->name }}"
                                                 alt="Image Product {{ $cart->name }} in Cart" class="d-block rounded-2"
                                                 style="width: 5em; height:5em; object-fit:cover">
                                             <div>
+                                                <div class="mb-1">
+                                                    <div class="d-inline-block p-1 px-2 rounded-2 bg-primary-subtle text-primary fs-2">{{ $cart->type->type }}</div>
+                                                </div>
                                                 <div class="text-decoration-none text-dark fs-3 fw-semibold">
                                                     {{ $cart->name }}</div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div><i class="ti ti-arrow-up"></i> {{ $cart->height }} cm</div>
+                                                    <div><i class="ti ti-arrow-right"></i> {{ $cart->width }} cm</div>
+                                                </div>
                                                 <div class="text-muted fs-2 mb-2">
                                                     {{ $cart->description ?? 'tidak ada deskripsi' }}</div>
                                             </div>
@@ -658,8 +618,8 @@
                                                     {{ formatRupiah($subtotal) }}</div>
                                             </div>
                                         </div>
-                                        <div class="d-flex align-items-end gap-2">
-                                            <div>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <div class="box-qty">
                                                 <label for="qty" class="form-label {{ $cart->unit ? '' : 'text-danger'}} fs-2">
                                                     {{ $cart->unit ? 'Dibeli Sebanyak ('.$cart?->unit?->code.')' : 'Satuan produk belum diatur' }}</label>
                                                 <div class="d-flex align-items-center gap-2">
@@ -667,10 +627,27 @@
                                                         value="{{ $item['id'] }}">
                                                     <input type="number" name="qty[]" id="qty_{{ $item['id'] }}"
                                                         class="form-control form-control-sm qty-input"
-                                                        data-id="{{ $item['id'] }}" value="{{ $item['qty'] }}"
+                                                        data-id="{{ $item['id'] }}" value="{{ $reqproduct->qty ?? $item['qty'] }}"
                                                         min="1" {{$reqorder->status != 0 ? 'disabled' : ''}} />
                                                 </div>
+                                                
+                                                <div class="fs-1 mt-1 stock-info text-muted">Stock tersisa <span class="text-count">{{ $cart->stock_count }}</span> qty</div>
                                             </div>
+                                            @if($cart->type->type == 'meteran')
+                                            <div>
+                                                <label for="qty" class="form-label {{ $cart->unit ? '' : 'text-danger'}} fs-2">
+                                                    {{ $cart->unit ? 'Panjang (cm) per Qty' : 'Satuan produk belum diatur' }}</label>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input type="number" name="length[]" id="length_{{ $item['id'] }}"
+                                                        class="form-control form-control-sm qty-input"
+                                                        data-id="{{ $item['id'] }}" value="{{ $item['length'] ?? ($reqproduct?->length ?? 0) }}"
+                                                        min="1" max="{{ $cart->width }}" {{$reqorder->status != 0 ? 'disabled' : ''}} />
+                                                </div>
+                                                <div class="fs-1 mt-1 text-muted">Maksimal Panjang Lebar {{ $cart->width }}cm</div>
+                                            </div>
+                                            @else
+                                            <input type="hidden" name="length[]" value="">
+                                            @endif
                                             <div class="flex-grow-1">
                                                 <label for="price_sale" class="form-label fs-2">Dengan Harga Jual</label>
                                                 <input type="text" name="price_sale[]"
@@ -678,8 +655,9 @@
                                                     class="form-control form-control-sm input-rupiah price-sale-input"
                                                     data-id="{{ $item['id'] }}" value="{{ formatRupiah($priceSale) }}"
                                                     min="0" {{$reqorder->status != 0 ? 'disabled' : ''}} />
+                                                <div class="fs-1 mt-1 text-muted">Penetapan Harga Jual {{ formatRupiah($cart->price_per_unit) }}</div>
                                             </div>
-                                            <button class="btn btn-sm btn-danger remove-cart"
+                                            <button class="btn btn-sm btn-danger remove-cart align-self-center"
                                                 data-url="{{ route('request-order.removeCart', $reqorder->id) }}"
                                                 data-product-id="{{ $item['id'] }}"
                                                 data-reqorder-id="{{ $reqorder->id }}" {{$reqorder->status != 0 ? 'disabled' : ''}}>
@@ -696,7 +674,7 @@
                                 <div class="pt-3 mt-3 border-top border-2">
                                     <div class="d-flex align-items-center mb-2 gap-2 justify-content-between">
                                         <div class="fs-3 fw-semibold">Total</div>
-                                        <div class="fs-4 fw-bold" id="totalPrice">{{ formatRupiah($totalPrice) }}</div>
+                                        <div class="fs-3 fs-sm-4 fw-bold" id="totalPrice">{{ formatRupiah($totalPrice) }}</div>
                                         <input type="hidden" name="total_price" value="" id="totalPriceInput">
                                     </div>
                                     <div class="d-flex align-items-center mb-2 gap-2 justify-content-between">
@@ -708,7 +686,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2 justify-content-between">
                                         <div class="fs-3 fw-semibold">Total Termasuk Pajak</div>
-                                        <div class="fs-4 fw-bold" id="totalPriceTaxed">-</div>
+                                        <div class="fs-3 fs-sm-4 fw-bold" id="totalPriceTaxed">-</div>
                                         <input type="hidden" name="total_price_taxed" value="" id="totalPriceTaxedInput">
                                     </div>
                                     <div class="d-flex align-items-center gap-2 mt-2">
@@ -851,321 +829,6 @@
                 </div>
             </div>
 
-            <div class="step-content" data-step="4" style="display: none;">
-                <div class="d-flex mb-3 align-items-center gap-3">
-                    <i class="ti ti-building-factory fs-9"></i>
-                    <h5 class="mb-0">Proses Ke Principal</h5>
-                    <div class="d-flex align-items-center justify-content-center bg-primary text-white p-2 rounded-circle"
-                        style="aspect-ratio:1/1; width:2.5em; height:2.5em">
-                        {{ $reqorder->purchaseOrders->count() }}
-                    </div>
-                </div>
-                @if ($reqorder->purchaseOrders->count() > 0)
-                    @foreach ($reqorder->purchaseOrders as $purchase)
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="btn-accordion p-3 border border-2 rounded-3 border-dashed">
-                                    <div class="d-flex align-items-center gap-2 flex-wrap justify-content-between" style="cursor: pointer">
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Kode Pembelian
-                                            </div>
-                                            <h6 class="fw-semibold text-primary mb-1" style="">{{ $purchase->code }}</h6>
-                                        </div>
-                                        @php
-                                            $status = [
-                                                '0' => ['label' => 'Pending','color' => 'secondary'],
-                                                '1' => ['label' => 'Diproses','color' => 'warning',],
-                                                '2' => ['label' => 'Selesai','color' => 'success'],
-                                            ];
-
-                                            $statusInvoice = [
-                                                '0' => ['label' => 'Belum Ditagih / Stock','color' => 'secondary'],
-                                                '1' => ['label' => 'Ditagih','color' => 'success'],
-                                            ];
-                                        @endphp
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="">Status Permintaan
-                                            </div>
-                                            <h6 class="fw-semibold fs-2 text-{{ $status[$purchase->status]['color'] }} mb-1" style="">{{ $status[$purchase->status]['label'] }}</h6>
-                                        </div>
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="">Status Penagihan Invoice
-                                            </div>
-                                            <h6 class="fw-semibold fs-2 text-{{ $statusInvoice[$purchase->generate_invoice]['color'] }} mb-1" style="">{{ $statusInvoice[$purchase->generate_invoice]['label'] }}</h6>
-                                        </div>
-                                        <div class="flex-grow-1 text-end">
-                                            <div class="fs-1 text-muted">Klik untuk melihat detail</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="btn-accordion-content row mt-3">
-                                    <div class="col-md-4 mb-3 mb-md-0">
-                                        <a class="d-flex align-items-center gap-2 mb-2" href="{{route('purchase-order.setting', $purchase->id)}}"><h6 class="mb-0">Pembelian</h6> <i class="ti ti-external-link"></i></a>
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Tanggal</div>
-                                            <h6 class="fs-2 fw-semibold text-success mb-1" style="">
-                                                {{ \Carbon\Carbon::parse($purchase->date)->format('d F Y') }}</h6>
-                                        </div>
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Kode Pembelian
-                                            </div>
-                                            <h6 class="fw-semibold text-primary mb-1" style="">{{ $purchase->code }}</h6>
-                                        </div>
-                                        @php
-                                            $status = [
-                                                '0' => ['label' => 'Pending','color' => 'secondary'],
-                                                '1' => ['label' => 'Diproses','color' => 'warning',],
-                                                '2' => ['label' => 'Selesai','color' => 'success'],
-                                            ];
-
-                                            $statusInvoice = [
-                                                '0' => ['label' => 'Belum Ditagih / Stock','color' => 'secondary'],
-                                                '1' => ['label' => 'Ditagih','color' => 'success'],
-                                            ];
-                                        @endphp
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="">Status Permintaan
-                                            </div>
-                                            <h6 class="fw-semibold fs-2 text-{{ $status[$purchase->status]['color'] }} mb-1" style="">{{ $status[$purchase->status]['label'] }}</h6>
-                                        </div>
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="">Status Penagihan Invoice
-                                            </div>
-                                            <h6 class="fw-semibold fs-2 text-{{ $statusInvoice[$purchase->generate_invoice]['color'] }} mb-1" style="">{{ $statusInvoice[$purchase->generate_invoice]['label'] }}</h6>
-                                        </div>
-                                        <div style="min-width: 10em">
-                                            <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Deksripsi</div>
-                                            <p class="mb-1 fs-2" style="white-space:normal !important;">{{ $purchase->description ?? 'tidak ada deskripsi' }}</p>
-                                        </div>
-                                        <hr>
-                                        <h6>Permintaan Client (Request Order)</h6>
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Tanggal</div>
-                                            <h6 class="fs-2 fw-semibold text-success mb-1" style="">
-                                                {{ \Carbon\Carbon::parse($purchase->requestOrder->date)->format('d F Y') }}</h6>
-                                        </div>
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Kode Permintaan
-                                            </div>
-                                            <h6 class="fw-semibold text-primary mb-1" style="">{{ $purchase->requestOrder->code }}</h6>
-                                        </div>
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Referensi
-                                                Permintaan (PO)</div>
-                                            <a href="{{ $purchase->requestOrder->attachment ? '/storage/'.$purchase->requestOrder->attachment : '#' }}" class="badge fs-2 mb-1 bg-primary-subtle text-primary border-primary">
-                                                <i class="ti ti-file"></i>
-                                                {{ $purchase->requestOrder->attachment ? $purchase->requestOrder->no_refrence : 'Tidak ada Lampiran'}}
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3 mb-md-0">
-                                        <div class="">
-                                            <h6>Memesan Ke Principal</h6>
-                                            <a href="{{route('principal.setting', $purchase->principal->id)}}" target="_blank" class="border border-primary p-1 px-2 rounded-2 d-inline-flex align-items-center fs-2 mb-1 gap-2">
-                                                <i class="ti ti-building-skyscraper mb-0 fs-3"></i> {{ $purchase->principal->name }}
-                                            </a>
-                                            <div class="fw-normal fs-1 text-muted" style="">PIC Principal</div>
-                                            <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                                <i class="ti ti-user-circle mb-0 fs-3"></i> {{ $purchase->pic->name }}
-                                            </div>
-                                            <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                                <i class="ti ti-mail mb-0 fs-3"></i> {{ $purchase->pic->email ?? '-' }}
-                                            </div>
-                                            <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                                <i class="ti ti-phone mb-0 fs-3"></i> {{ $purchase->pic->phone ?? '-' }}
-                                            </div>
-                                        </div>
-                                        <hr>
-                                        <div class="">
-                                            @if($purchase->transport)
-                                                <h6>Dengan Detail Logistik / Pengangkutan</h6>
-                                                <a href="{{route('logistic.setting', $purchase->transport->logistic->id)}}" target="_blank" class="border border-primary p-1 px-2 rounded-2 d-inline-flex align-items-center fs-2 mb-1 gap-2">
-                                                    <i class="ti ti-truck-delivery mb-0 fs-3"></i> {{ $purchase->transport->logistic->name }}
-                                                </a>
-                                                <a href="javascript:void(0);" title="Klik untuk melihat detail" class="d-flex text-secondary align-items-center fs-2 mb-1 gap-2"
-                                                    data-bs-toggle="modal" data-bs-target="#detailDelivery-{{$purchase->id}}"
-                                                >
-                                                    <i class="ti ti-exchange mb-0 fs-3"></i> Detail Antar Jemput
-                                                </a>
-                                                <!-- List Product modal -->
-                                                <div class="modal fade " id="detailDelivery-{{$purchase->id}}" tabindex="-1"
-                                                    aria-labelledby="vertical-center-modal" aria-hidden="true">
-                                                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header d-flex align-items-center">
-                                                                <h4 class="modal-title" id="myLargeModalLabel">
-                                                                    Pengantaran dan Penjemputan Barang
-                                                                </h4>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                                    aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body pt-0">
-                                                                <div class="p-3 rounded-3 border border-dashed mb-2 border-secondary">
-                                                                    <div class="fs-2 text-muted">Penjemputan Barang</div>
-                                                                    <div>
-                                                                        <div class="fs-3">{{$purchase->pickup->address.', '.$purchase->pickup->city.'. '.$purchase->pickup->postal_code}}</div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="p-3 rounded-3 border border-dashed border-primary">
-                                                                    <div class="fs-2 text-muted">Pengantaran Barang</div>
-                                                                    <div>
-                                                                        <div class="fs-3">{{$purchase->delivery->address.', '.$purchase->delivery->city.'. '.$purchase->delivery->postal_code}}</div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="fw-normal fs-1 text-muted" style="">Contact Person</div>
-                                                <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                                    <i class="ti ti-user-circle mb-0 fs-3"></i> {{ $purchase->transport->logistic->cp_name }}
-                                                </div>
-                                                <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                                    <i class="ti ti-mail mb-0 fs-3"></i> {{ $purchase->transport->logistic->cp_email ?? '-' }}
-                                                </div>
-                                                <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                                    <i class="ti ti-phone mb-0 fs-3"></i> {{ $purchase->transport->logistic->cp_phone ?? '-' }}
-                                                </div>
-                                            @else
-                                                <div class="fs-2">Diurus Oleh Principal</div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3 mb-md-0">
-                                        <div class="mb-3">
-                                            <h6>Produk yang diproses</h6>
-                                            <button type="button"
-                                                class="dropdown-item fs-2 text-center d-inline-flex p-2 px-3 align-items-center gap-2 bg-secondary text-white rounded-3"
-                                                data-bs-toggle="modal" data-bs-target="#produkModal-{{$purchase->id}}"><i
-                                                    class="fs-4 ti ti-package"></i> {{ count($purchase->products) }} Produk</button>
-
-                                            <!-- List Product modal -->
-                                            <div class="modal fade " id="produkModal-{{$purchase->id}}" tabindex="-1"
-                                                aria-labelledby="vertical-center-modal" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header d-flex align-items-center">
-                                                            <h4 class="modal-title" id="myLargeModalLabel">
-                                                                Produk yang Dipesan
-                                                            </h4>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                                aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body pt-0">
-                                                            @foreach ($purchase->products as $purchaseProduct)
-                                                                @php
-                                                                    $priceSale = $purchaseProduct->price_buy ?? 0; // Harga jual (diambil dari cart)
-                                                                    $subtotal = $priceSale * $purchaseProduct->qty; // Hitung subtotal awal
-                                                                @endphp
-                                                                <div class="border border-1 border-dashed border-primary {{$loop->index+1 == count($purchase->products) ? '' : 'mb-2'}} p-3 rounded-3">
-                                                                    <div
-                                                                        class="d-flex align-items-center gap-2 mb-2 {{ $loop->index == 0 ? '' : 'mt-3' }}">
-                                                                        <img src="{{ $purchaseProduct->product->image ? '/storage/' . $purchaseProduct->product->image : 'https://placehold.co/300?text=' . $purchaseProduct->product->name }}"
-                                                                            alt="Image Product {{ $purchaseProduct->product->name }} in Cart" class="d-block rounded-2"
-                                                                            style="width: 5em; height:5em; object-fit:cover">
-                                                                        <div>
-                                                                            <div class="text-decoration-none text-dark fs-3 fw-semibold">
-                                                                                {{ $purchaseProduct->product->name }}</div>
-                                                                            <div class="text-muted fs-2 mb-2">
-                                                                                {{ $purchaseProduct->product->description ?? 'tidak ada deskripsi' }}</div>
-                                                                        </div>
-                                                                        <div
-                                                                            class="flex-grow-1 d-flex flex-column align-items-end gap-2 justify-content-between">
-                                                                            <div class="fs-2 fw-semibold">Sub Total</div>
-                                                                            <div class="fs-3 fw-bold subtotal">
-                                                                                {{ formatRupiah($subtotal) }}</div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="d-flex align-items-end gap-2">
-                                                                        <div>
-                                                                            <label for="qty" class="text-muted fs-1">Memproses Sebanyak
-                                                                                ({{ $purchaseProduct->product->unit->code }})</label>
-                                                                            <div class="d-flex align-items-center gap-2">
-                                                                                {{ $purchaseProduct->qty }}
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="flex-grow-1">
-                                                                            <label for="price_buy" class="text-muted fs-1">Dengan Harga Beli</label>
-                                                                            <div>{{ formatRupiah($purchaseProduct->price_buy) }}</div>
-                                                                        </div>
-                                                                        <div>
-                                                                            <label for="qty" class="text-muted fs-1">Dikemas Dengan </label>
-                                                                            <div class="d-flex align-items-center gap-2">
-                                                                                {{ $purchaseProduct->pack->name.' @ '.$purchaseProduct->pack->capacity.' '.$purchaseProduct->pack->unit->code }}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            @endforeach
-                                                            <div class="pt-3 mt-3 border-top border-2">
-                                                                <div class="d-flex align-items-center gap-2 justify-content-between">
-                                                                    <div class="fs-3 fw-semibold">Total</div>
-                                                                    @if($purchase->products->count() > 0)
-                                                                    <div class="fs-4 fw-bold">{{ formatRupiah($purchase->total_price) }}</div>
-                                                                    @else
-                                                                    <div class="fs-4 fw-bold">Lengkapi Data Dahulu <a href="{{ route('purchase-order.setting', $purchase->id).'#produk' }}" class="btn btn-sm btn-warning ms-2">Lengkapi</a></div>
-                                                                    @endif
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <hr>
-                                        <h6>Kalkulasi Pembayaran</h6>
-                                        @if($purchase->products->count() > 0)
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="">Total Nilai Awal</div>
-                                            <h6 class="fw-semibold fs-2 text-primary mb-1" style="">{{ formatRupiah($purchase->total_price) }}</h6>
-                                        </div>
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="">Pajak</div>
-                                            <h6 class="fw-semibold fs-2 text-primary mb-1" style="">{{ $purchase->tax ?? '11' }}%</h6>
-                                        </div>
-                                        <div>
-                                            <div class="fw-normal fs-1 text-muted" style="">Total Dengan Pajak</div>
-                                            {{-- @php
-                                                dd($purchase->total_price, $purchase->tax, $purchase->tax && (int)$purchase->tax != '0' ? $purchase->tax : 11, ));
-                                            @endphp --}}
-                                            <h6 class="fw-semibold fs-2 text-primary mb-1">
-                                                {{ 
-                                                    (int) $purchase->total_price_taxed && (int) $purchase->total_price_taxed != 0 
-                                                        ? formatRupiah($purchase->total_price_taxed) 
-                                                        : formatRupiah((int) $purchase->total_price + ((int) $purchase->total_price * (($purchase->tax && (int) $purchase->tax != 0 ? $purchase->tax : 11) / 100)))
-                                                }}
-                                            </h6>
-                                        </div>
-                                        @else
-                                        Lengkapi Data Dahulu
-                                        @endif
-
-                                        <hr>
-                                        <h6>Timestamp</h6>
-                                        <div class="d-flex flex-column align-items-start gap-2">
-                                            <div class="badge bg-success-subtle text-success rounded-3 fw-semibold fs-2">
-                                                Updated
-                                                at
-                                                : {{ $purchase->updated_at }}</div>
-                                            <div class="badge bg-primary-subtle text-primary rounded-3 fw-semibold fs-2">
-                                                Created
-                                                at
-                                                : {{ $purchase->created_at }}</div>
-                                        </div>
-                                        
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                @else
-                    <div class="p-5 text-center border rounded-3 border-dashed border-2 bg-light border-primary">
-                        <div class="mb-2">Permintaan ini Belum di Proses</div>
-                        <a href="{{ route('purchase-order.add', ['reqid' => $reqorder->id]) }}" class="btn btn-primary">Proses Permintaan</a>
-                    </div>
-                @endif  
-            </div>  
-            
              <div class="step-content" data-step="5" style="display: none;">
                 <div class="d-flex mb-3 align-items-center gap-3">
                     <i class="ti ti-credit-card fs-9"></i>
@@ -1819,5 +1482,40 @@
             // Jalankan update awal saat halaman dimuat
             updateSubtotalAndTotal();
         });
+
+       $(document).ready(function () {
+         $('input[id^="length_"]').on('input', function () {
+            const length = $(this).val();
+            const productId = $(this).data('id');
+            const stockInfoContainer = $(this).closest(`#cart-item-${productId}`).find('.stock-info');
+
+            if (length < 1) {
+               stockInfoContainer.html(`<span class="text-danger">Panjang tidak valid</span>`);
+               return;
+            }
+
+            $.ajax({
+               url: "{{ route('product.checklength') }}",
+               method: "GET",
+               data: {
+                  product_id: productId,
+                  length: length
+               },
+               success: function (res) {
+                  if (res.success) {
+                     stockInfoContainer.html(`
+                        <span class="text-success">${res.qty} stok tersedia</span>
+                     `);
+                  } else {
+                     stockInfoContainer.html(`<span class="text-warning">${res.message}</span>`);
+                  }
+               },
+               error: function (xhr) {
+                  const msg = xhr.responseJSON?.message || "Terjadi kesalahan.";
+                  stockInfoContainer.html(`<span class="text-danger">${msg}</span>`);
+               }
+            });
+         });
+      });
     </script>
 @endsection

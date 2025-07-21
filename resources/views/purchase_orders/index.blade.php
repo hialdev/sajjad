@@ -85,7 +85,7 @@
                                 <h6 class="fs-3 fw-semibold mb-0">Deskripsi</h6>
                             </th>
                             <th>
-                                <h6 class="fs-3 fw-semibold mb-0">Permintaan Client</h6>
+                                <h6 class="fs-3 fw-semibold mb-0">Kirim Ke Gudang</h6>
                             </th>
                             <th>
                                 <h6 class="fs-3 fw-semibold mb-0">Principal</h6>
@@ -95,6 +95,9 @@
                             </th>
                             <th>
                                 <h6 class="fs-3 fw-semibold mb-0">Produk Diproses</h6>
+                            </th>
+                            <th>
+                                <h6 class="fs-3 fw-semibold mb-0">Penerimaan</h6>
                             </th>
                             <th>
                                 <h6 class="fs-3 fw-semibold mb-0">Kalkulasi</h6>
@@ -149,43 +152,21 @@
                                     </div>
                                 </td>
                                 <td>
-                                    @if( $purchase->requestOrder )
-                                    <div>
-                                        <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Tanggal</div>
-                                        <h6 class="fs-2 fw-semibold text-success mb-1" style="">
-                                            {{ \Carbon\Carbon::parse($purchase->requestOrder->date)->format('d F Y') }}</h6>
-                                    </div>
-                                    <div>
-                                        <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Kode Permintaan
+                                    <div class="">
+                                        <a href="{{route('warehouse.index', ['search' => $purchase->warehouse->name])}}" target="_blank" class="border border-primary p-1 px-2 rounded-2 d-inline-flex align-items-center fs-2 mb-1 gap-2">
+                                            <i class="ti ti-building-warehouse mb-0 fs-3"></i> {{ $purchase->warehouse->name }}
+                                        </a>
+                                        <div class="fw-normal fs-1 text-muted" style="">Detail</div>
+                                        <div class="d-flex align-items-center fs-2 mb-1 gap-2">
+                                            <i class="ti ti-map-2 mb-0 fs-3"></i> {{ $purchase->warehouse->address.', '.$purchase->warehouse->city.'. '.$purchase->warehouse->postal_code }}
                                         </div>
-                                        <a href="{{route('request-order.setting', $purchase->requestOrder->id)}}" target="_blank" class="fw-semibold text-primary mb-1" style="">{{ $purchase->requestOrder->code }} <i class="ti ti-external-link"></i></a>
-                                    </div>
-                                    @php
-                                        $status = [
-                                            '0' => ['label' => 'Pending','color' => 'secondary'],
-                                            '1' => ['label' => 'Diproses','color' => 'warning',],
-                                            '2' => ['label' => 'Selesai','color' => 'success'],
-                                        ];
-
-                                        $statusInvoice = [
-                                            '0' => ['label' => 'Belum Ditagih / Stock','color' => 'secondary'],
-                                            '1' => ['label' => 'Ditagih','color' => 'success'],
-                                            '2' => ['label' => 'Ditagih Bertahap','color' => 'success'],
-                                        ];
-                                    @endphp
-                                    <div>
-                                        <div class="fw-normal fs-1 text-muted" style="">Status Permintaan
+                                        <div class="d-flex align-items-center fs-2 mb-1 gap-2">
+                                            <i class="ti ti-mail mb-0 fs-3"></i> {{ $purchase->warehouse->email ?? '-' }}
                                         </div>
-                                        <h6 class="fw-semibold fs-2 text-{{ $status[$purchase->requestOrder->status]['color'] }} mb-1" style="">{{ $status[$purchase->requestOrder->status]['label'] }}</h6>
-                                    </div>
-                                    <div>
-                                        <div class="fw-normal fs-1 text-muted" style="">Status Penagihan Invoice
+                                        <div class="d-flex align-items-center fs-2 mb-1 gap-2">
+                                            <i class="ti ti-phone mb-0 fs-3"></i> {{ $purchase->warehouse->phone ?? '-' }}
                                         </div>
-                                        <h6 class="fw-semibold fs-2 text-{{ $statusInvoice[($purchase->requestOrder->is_partial ?? $purchase->requestOrder->generate_invoice)]['color'] }} mb-1" style="">{{ $statusInvoice[($purchase->requestOrder->is_partial ?? $purchase->requestOrder->generate_invoice)]['label'] }}</h6>
                                     </div>
-                                    @else
-                                    <div class="fs-2">Tidak berdasarkan Permintaan Client</div>
-                                    @endif
                                 </td>
                                 <td>
                                     <a href="{{route('principal.setting', $purchase->principal->id)}}" target="_blank" class="border border-primary p-1 px-2 rounded-2 d-flex align-items-center fs-2 mb-1 gap-2">
@@ -333,6 +314,40 @@
                                             </div>
                                         </div>
                                     </div>
+                                </td>
+                                <td>
+                                    @if($purchase->receive)
+                                    <div>
+                                        <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Tanggal</div>
+                                        <h6 class="fs-2 fw-semibold text-success mb-1" style="">
+                                            {{ \Carbon\Carbon::parse($purchase->receive->date)->format('d F Y') }}</h6>
+                                    </div>
+                                    <div>
+                                        <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Detail Penerimaan
+                                        </div>
+                                        <a href="{{route('receive.setting', $purchase->receive->id)}}" class="d-flex align-items-center">
+                                            <h6 class="fw-semibold text-primary mb-1" style="">{{ $purchase->receive->code }}</h6> <i class="ti ti-external-link ms-1"></i>
+                                        </a>
+                                    </div>
+                                    <div class="mb-1">
+                                        <div class=""><i class="ti ti-user-circle me-2"></i> {{ $purchase->receive->user->name }}</div>
+                                        <a href="{{route('receive.setting', $purchase->receive->id)}}#produk" class="text-secondary"><i class="ti ti-package me-2"></i> {{ $purchase->receive->products->count() }} Produk</a>
+                                    </div>
+                                    <div>
+                                        @php
+                                        $statusStock = [
+                                            '0' => ['label' => 'Belum masuk ke Stock','color' => 'secondary'],
+                                            '1' => ['label' => 'Tercatat di Stock','color' => 'success'],
+                                        ];
+                                        @endphp
+
+                                        <div class="fw-normal fs-1 text-muted" style="">Status Stock
+                                        </div>
+                                        <h6 class="fw-semibold fs-2 text-{{ $statusStock[$purchase->receive->is_stocked]['color'] }} mb-1" style="">{{ $statusStock[$purchase->receive->is_stocked]['label'] }}</h6>
+                                    </div>
+                                    @else
+                                    Belum ada Penerimaan
+                                    @endif
                                 </td>
                                 <td>
                                     @if($purchase->products->count() > 0)

@@ -16,8 +16,11 @@ return new class extends Migration
         Schema::connection('osano')->create('stock_meters', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('product_id');
-            $table->uuid('unit_id');
-
+            $table->enum('nowin_type', ['warehouse', 'store']);
+            $table->uuid('nowin_id')->nullable();
+            $table->boolean('is_onway')->default(0);
+                                            
+            $table->bigInteger('sold_length')->nullable();
             $table->bigInteger('length')->nullable();
             
             $table->timestamps();
@@ -25,11 +28,6 @@ return new class extends Migration
             $table->foreign('product_id')
                 ->references('id')
                 ->on('products')
-                ->onDelete('restrict');
-            
-            $table->foreign('unit_id')
-                ->references('id')
-                ->on('units')
                 ->onDelete('restrict');
         });
     }

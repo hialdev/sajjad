@@ -29,15 +29,6 @@ class PurchaseOrderProductController extends Controller
 
         $purchase = PurchaseOrder::findOrFail($id);
 
-        if($purchase->requestOrder){
-            foreach ($request->product_id as $index => $productId) {
-                $maxQty = $purchase->requestOrder->getProcessingAnalytics()[$productId]['remaining_qty'] ?? 0;
-                $prdct = Product::find($productId);
-                if ($request->qty[$index] > $maxQty) {
-                    return back()->withErrors(["qty.$index" => "Jumlah produk ID $prdct->name melebihi batas maksimal ($maxQty)."]);
-                }
-            }
-        }
         try {
             if($purchase->payment_status != 0 && $purchase->requestOrder->status > 1){
                 return redirect()->back()->withInput()->with('error', 'Gagal menyimpan Produk Pembelian Ke Principal, Error: Status Pembelian Ke Principal tidak diizinkan untuk perubahan / hapus.');

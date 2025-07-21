@@ -80,10 +80,16 @@
                                 <h6 class="fs-3 fw-semibold mb-0">Deskripsi</h6>
                             </th>
                             <th>
+                                <h6 class="fs-3 fw-semibold mb-0">Bal Produk</h6>
+                            </th>
+                            <th>
                                 <h6 class="fs-3 fw-semibold mb-0">Pembongkaran</h6>
                             </th>
                             <th>
-                                <h6 class="fs-3 fw-semibold mb-0">Purchase Order</h6>
+                                <h6 class="fs-3 fw-semibold mb-0">Purchase</h6>
+                            </th>
+                            <th>
+                                <h6 class="fs-3 fw-semibold mb-0">Penerimaan</h6>
                             </th>
                             <th>
                                 <h6 class="fs-3 fw-semibold mb-0">Timestamp</h6>
@@ -101,6 +107,10 @@
                                         <div class="ms-3">
                                             <div class="badge bg-primary fs-1 mb-1 text-white">{{ $bal->code }}</div>
                                             <h6 class="fw-semibold mb-1" style="white-space: normal !important">{{ $bal->name }}</h6>
+                                            <div class="mb-1 rounded-2 bg-primary-subtle p-3">
+                                                <div class="fs-2 fw-semibold text-muted"><i class="ti ti-map-pin me-2"></i> Lokasi Barang</div>
+                                                <a href="{{route($bal->nowin_type.'.index', ['search' => $bal->nowin->code])}}" class="btn p-0 text-dark"><i class="ti ti-building-{{$bal->nowin_type}} me-2"></i> {{ $bal->nowin->name }}</a>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -108,15 +118,171 @@
                                     <div class="fw-normal" style="white-space:normal; font-size:13px; ">{{ $bal->description ?? 'Tidak ada deskripsi'}}</div>    
                                 </td>
                                 <td>
-                                    @if($bal->is_unpack && $bal->unpack)
-                                    @else
-                                    <a href="{{route('bal.unpack.add', $bal->id)}}" class="btn btn-primary-subtle bg-primary-subtle btn-sm d-block">Bongkar</a>
-                                    @endif
+                                    <button type="button"
+                                        class="dropdown-item fs-2 text-center d-inline-flex p-2 px-3 align-items-center gap-2 bg-secondary text-white rounded-3"
+                                        data-bs-toggle="modal" data-bs-target="#produkModal-{{$bal->id}}"><i
+                                            class="fs-4 ti ti-package"></i> {{ count($bal->products) }} Produk</button>
+
+                                    <!-- List Product modal -->
+                                    <div class="modal fade " id="produkModal-{{$bal->id}}" tabindex="-1"
+                                        aria-labelledby="vertical-center-modal" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                            <div class="modal-content">
+                                                <div class="modal-header d-flex align-items-center">
+                                                    <h4 class="modal-title" id="myLargeModalLabel">
+                                                        Bal Berisi Produk
+                                                    </h4>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body pt-0">
+                                                    @forelse ($bal->products as $balProduct)
+                                                        <div class="border border-1 border-dashed border-primary {{$loop->index+1 == count($bal->products) ? '' : 'mb-2'}} p-3 rounded-3">
+                                                            <div
+                                                                class="d-flex align-items-center gap-2 {{ $loop->index == 0 ? '' : 'mt-3' }}">
+                                                                <img src="{{ $balProduct->product->image ? '/storage/' . $balProduct->product->image : 'https://placehold.co/300?text=' . $balProduct->product->name }}"
+                                                                    alt="Image Product {{ $balProduct->product->name }} in Cart" class="d-block rounded-2"
+                                                                    style="width: 5em; height:5em; object-fit:cover">
+                                                                <div>
+                                                                    <div class="text-decoration-none text-dark fs-3 fw-semibold">
+                                                                        {{ $balProduct->product->name }}</div>
+                                                                    <div class="text-muted fs-2 mb-2">
+                                                                        {{ $balProduct->product->description ?? 'tidak ada deskripsi' }}</div>
+                                                                </div>
+                                                                <div
+                                                                    class="flex-grow-1 d-flex flex-column align-items-end justify-content-between">
+                                                                    <div class="fs-1 mb-0 fw-semibold text-muted">Sebanyak</div>
+                                                                    <div class="fs-3 fw-bold subtotal">
+                                                                        {{ $balProduct->qty }} qty</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @empty
+                                                        <a href="{{route('bal.edit', $bal->id)}}" class="btn btn-secondary w-100"><i class="ti ti-settings me-2"></i> Kelola Produk</a>
+                                                    @endforelse
+                                                    
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
                                     @if($bal->is_unpack && $bal->unpack)
+                                        <button type="button"
+                                            class="dropdown-item fs-2 text-center d-inline-flex p-2 px-3 align-items-center gap-2 bg-secondary text-white rounded-3"
+                                            data-bs-toggle="modal" data-bs-target="#unpackModal-{{$bal->id}}"><i
+                                                class="fs-4 ti ti-circles"></i> Detail Pembongkaran</button>
+
+                                        <!-- List Product modal -->
+                                        <div class="modal fade " id="unpackModal-{{$bal->id}}" tabindex="-1"
+                                            aria-labelledby="vertical-center-modal" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                                <div class="modal-content">
+                                                    <div class="modal-header d-flex align-items-center">
+                                                        <h4 class="modal-title" id="myLargeModalLabel">
+                                                            Detail Pembongkaran Bal
+                                                        </h4>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body pt-0">
+                                                        <img src="{{'/storage/'.$bal->unpack->image}}" target="_blank" class="mb-2 d-block rounded-3 w-full w-100" />
+                                                        <div>
+                                                            <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Dibongkar Pada</div>
+                                                            <h6 class="fs-2 fw-semibold text-success mb-1" style="">
+                                                                {{ \Carbon\Carbon::parse($bal->unpack->updated_at)->format('d F Y H:i:s') }}</h6>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-normal fs-1 text-muted" style="">Pembongkar
+                                                            </div>
+                                                            <div class=""><i class="ti ti-user-circle me-2"></i> {{$bal->unpack->user->name}}</div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-normal fs-1 text-muted" style="">Deskripsi
+                                                            </div>
+                                                            <div class="fs-3">{{$bal->unpack->description}}</div>
+                                                        </div>
+                                                        <div class="mt-3 d-flex gap-2 justify-content-center align-items-center">
+                                                            <a href="{{route('bal.unpack.edit', ['id' => $bal->id, 'unpack_id' => $bal->unpack->id])}}" class="btn w-100 w-full btn-secondary"><i class="ti ti-edit me-1"></i> Edit</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <a href="{{route('bal.unpack.add', $bal->id)}}" class="btn btn-primary-subtle bg-primary-subtle btn-sm d-block">Bongkar</a>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($bal->purchase)
+                                        <div>
+                                            <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Tanggal</div>
+                                            <h6 class="fs-2 fw-semibold text-success mb-1" style="">
+                                                {{ \Carbon\Carbon::parse($bal->purchase->date)->format('d F Y') }}</h6>
+                                        </div>
+                                        <div>
+                                            <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Kode Pembelian
+                                            </div>
+                                            <a href="{{route('purchase-order.index', ['search' => $bal->purchase->code])}}" class="fw-semibold text-primary mb-1" style="">{{ $bal->purchase->code }} <i class="ti ti-external-link ms-1"></i> </a>
+                                        </div>
+                                        @php
+                                            $status = [
+                                                '0' => ['label' => 'Pending','color' => 'secondary'],
+                                                '1' => ['label' => 'Diproses','color' => 'warning',],
+                                                '2' => ['label' => 'Selesai','color' => 'success'],
+                                            ];
+
+                                            $statusInvoice = [
+                                                '0' => ['label' => 'Belum Ditagih / Stock','color' => 'secondary'],
+                                                '1' => ['label' => 'Ditagih','color' => 'success'],
+                                            ];
+                                        @endphp
+                                        <div>
+                                            <div class="fw-normal fs-1 text-muted" style="">Status Permintaan
+                                            </div>
+                                            <h6 class="fw-semibold fs-2 text-{{ $status[$bal->purchase->status]['color'] }} mb-1" style="">{{ $status[$bal->purchase->status]['label'] }}</h6>
+                                        </div>
+                                        <div>
+                                            <div class="fw-normal fs-1 text-muted" style="">Status Penagihan Invoice
+                                            </div>
+                                            <h6 class="fw-semibold fs-2 text-{{ $statusInvoice[$bal->purchase->generate_invoice]['color'] }} mb-1" style="">{{ $statusInvoice[$bal->purchase->generate_invoice]['label'] }}</h6>
+                                        </div>
                                     @else
                                     <div class="fs-2">Tidak ada Pembelian</div>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($bal->receive)
+                                    <div>
+                                        <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Tanggal</div>
+                                        <h6 class="fs-2 fw-semibold text-success mb-1" style="">
+                                            {{ \Carbon\Carbon::parse($bal->receive->date)->format('d F Y') }}</h6>
+                                    </div>
+                                    <div>
+                                        <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Detail Penerimaan
+                                        </div>
+                                        <a href="{{route('receive.setting', $bal->receive->id)}}" class="d-flex align-items-center">
+                                            <h6 class="fw-semibold text-primary mb-1" style="">{{ $bal->receive->code }}</h6> <i class="ti ti-external-link ms-1"></i>
+                                        </a>
+                                    </div>
+                                    <div class="mb-1">
+                                        <div class=""><i class="ti ti-user-circle me-2"></i> {{ $bal->receive->user->name }}</div>
+                                        <a href="{{route('receive.setting', $bal->receive->id)}}#produk" class="text-secondary"><i class="ti ti-package me-2"></i> {{ $bal->receive->products->count() }} Produk</a>
+                                    </div>
+                                    <div>
+                                        @php
+                                        $statusStock = [
+                                            '0' => ['label' => 'Belum masuk ke Stock','color' => 'secondary'],
+                                            '1' => ['label' => 'Tercatat di Stock','color' => 'success'],
+                                        ];
+                                        @endphp
+
+                                        <div class="fw-normal fs-1 text-muted" style="">Status Stock
+                                        </div>
+                                        <h6 class="fw-semibold fs-2 text-{{ $statusStock[$bal->receive->is_stocked]['color'] }} mb-1" style="">{{ $statusStock[$bal->receive->is_stocked]['label'] }}</h6>
+                                    </div>
+                                    @else
+                                    Belum ada Penerimaan
                                     @endif
                                 </td>
                                 <td>
@@ -160,14 +326,14 @@
                                             <div class="modal-content p-3 modal-filled bg-danger">
                                                 <div class="modal-header modal-colored-header text-white">
                                                     <h4 class="modal-title text-white" id="danger-header-modalLabel">
-                                                        Yakin ingin menghapus product ?
+                                                        Yakin ingin menghapus Bal ?
                                                     </h4>
                                                     <button type="button" class="btn-close btn-close-white"
                                                         data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body" style="width: fit-content; white-space:normal">
-                                                    <h5 class="mt-0 text-white">Product {{$bal->title}} akan dihapus</h5>
-                                                    <p class="text-white">Segala data yang berkaitan dengan product tersebut juga akan dihapus secara permanen.</p>
+                                                    <h5 class="mt-0 text-white">Bal {{$bal->name}} akan dihapus</h5>
+                                                    <p class="text-white">Segala data yang berkaitan dengan Bal tersebut juga akan dihapus secara permanen.</p>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">

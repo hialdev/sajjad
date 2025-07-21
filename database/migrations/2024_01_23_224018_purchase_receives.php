@@ -20,7 +20,9 @@ return new class extends Migration
             $table->date('date');
             $table->uuid('purchase_order_id');
             $table->uuid('warehouse_id');
-            $table->uuid('user_id'); // Penanggung Jawab Penerima
+            $table->bigInteger('user_id'); // Penanggung Jawab Penerima
+            $table->boolean('is_lock')->default(0);
+            $table->boolean('is_stocked')->default(0);
             $table->text('description')->nullable();
 
             $table->timestamps();

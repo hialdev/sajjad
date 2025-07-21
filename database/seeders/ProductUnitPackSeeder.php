@@ -2,66 +2,81 @@
 
 namespace Database\Seeders;
 
-use App\Models\Pack;
-use App\Models\Product;
-use App\Models\Unit;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
-class ProductUnitPackSeeder extends Seeder
+use App\Models\Unit;
+use App\Models\ProductType;
+use App\Models\Product;
+use App\Models\Pack;
+
+class  ProductUnitPackSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
-        DB::beginTransaction();
-        try {
-            // 1. Simpan Units terlebih dahulu dan simpan ID-nya
-            $unitIds = [];
-            $unitData = [
-                ['name' => 'Liter', 'code' => 'L'],
+        $faker = Faker::create('id_ID');   // bebas ganti locale
+
+        DB::transaction(function () use ($faker) {
+
+            /* ───── 1. Unit baku (idempotent) ───── */
+            $unitMap = collect([
+                ['name' => 'Liter',    'code' => 'L'],
                 ['name' => 'Kilogram', 'code' => 'Kg'],
-                ['name' => 'Pack', 'code' => 'pcs'],
-                ['name' => 'Sak', 'code' => 'zak'],
-            ];
+                ['name' => 'Pack',     'code' => 'pcs'],
+                ['name' => 'Sak',      'code' => 'zak'],
+            ])->mapWithKeys(function ($u) {
+                $unit = Unit::firstOrCreate(
+                    ['code' => $u['code']],
+                    ['name' => $u['name']]
+                );
+                return [$u['name'] => $unit->id];
+            });
 
-            foreach ($unitData as $unit) {
-                $createdUnit = Unit::create($unit);
-                $unitIds[$unit['name']] = $createdUnit->id; // Simpan ID unit yang baru dibuat
+            /* ───── 2. ProductType (kategori) ───── */
+            $typeIds = [];
+            $totalTypes = 10;
+
+            for ($i = 0; $i < $totalTypes; $i++) {
+                $ptname = $faker->unique()->word();
+                $ptcode   = strtoupper(substr($ptname, 0, 3));
+                $type = ProductType::create([
+                    'code' => $ptcode,
+                    'name' => 'Produk Tipe '.$ptname,
+                    'type' => $faker->randomElement(['satuan', 'meteran']),
+                ]);
+                $typeIds[] = $type->id;
             }
 
-            // 2. Simpan Products dengan unit_id yang benar
-            $productsData = [
-                ['name' => 'Produk A', 'unit_id' => $unitIds['Liter']],
-                ['name' => 'Produk B', 'unit_id' => $unitIds['Kilogram']],
-                ['name' => 'Produk C', 'unit_id' => $unitIds['Pack']],
-                ['name' => 'Produk D', 'unit_id' => $unitIds['Sak']],
-            ];
+            /* ───── 3. Product dummy ───── */
+            $totalProducts = 30;
 
-            foreach ($productsData as $product) {
-                Product::create($product);
+            for ($i = 0; $i < $totalProducts; $i++) {
+                $unitName = $faker->randomElement($unitMap->keys()->all());
+                $productTypeId = $faker->randomElement($typeIds);
+
+                Product::create([
+                    'name'            => 'Produk ' . strtoupper($faker->unique()->bothify('???')),
+                    'unit_id'         => $unitMap[$unitName],
+                    'price_per_unit'  => $faker->numberBetween(10_000, 500_000), // 10–500 rb
+                    'height'          => $faker->numberBetween(10, 300),         // cm
+                    'width'           => $faker->numberBetween(10, 300),         // cm
+                    'product_type_id' => $productTypeId,
+                ]);
             }
 
-            // 3. Simpan Packs dengan unit_id yang valid
-            $packsData = [
-                ['name' => 'Drum', 'capacity' => 500, 'unit_id' => $unitIds['Liter']],
-                ['name' => 'Peti Kayu', 'capacity' => 10, 'unit_id' => $unitIds['Kilogram']],
-                ['name' => 'Box', 'capacity' => 650, 'unit_id' => $unitIds['Pack']],
-                ['name' => 'Regular Box', 'capacity' => 320, 'unit_id' => $unitIds['Sak']],
-            ];
+            /* ───── 4. Pack dummy ───── */
+            $totalPacks = 10;
 
-            foreach ($packsData as $pack) {
-                Pack::create($pack);
+            for ($i = 0; $i < $totalPacks; $i++) {
+                $unitName = $faker->randomElement($unitMap->keys()->all());
+
+                Pack::create([
+                    'name'     => $faker->randomElement(['Drum', 'Box', 'Peti', 'Karung']) . ' ' . $faker->randomNumber(2),
+                    'capacity' => $faker->numberBetween(50, 1_000),
+                    'unit_id'  => $unitMap[$unitName],
+                ]);
             }
-
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            echo "Error: " . $e->getMessage();
-        }
+        });
     }
 }

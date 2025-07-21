@@ -53,4 +53,24 @@ class PurchaseReceive extends Model
     public function user(){
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function products(){
+        return $this->hasMany(PurchaseReceiveProduct::class, 'purchase_receive_id');
+    }
+
+    public function bals(){
+        return $this->hasMany(Bal::class, 'purchase_receive_id');
+    }
+
+    public function availableQtyBale()
+    {
+        $balIds = Bal::where('purchase_receive_id', $this->purchase_receive_id)
+            ->pluck('id');
+
+        $usedQty = BalProduct::whereIn('bal_id', $balIds)
+            ->where('product_id', $this->product_id)
+            ->sum('qty');
+
+        return max(0, $this->qty - $usedQty);
+    }
 }

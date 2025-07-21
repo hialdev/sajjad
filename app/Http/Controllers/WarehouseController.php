@@ -66,6 +66,11 @@ class WarehouseController extends Controller
         return view('warehouses.edit', compact('cities', 'warehouse'));
     }
 
+    public function stock($id){
+        $warehouse = Warehouse::findOrFail($id);
+        return view('warehouses.stock', compact('warehouse'));
+    }
+
     public function update($id, Request $request){
         $request->validate([
             'image' => 'nullable|image|mimes:webp,png,jpg,jpeg,jfif,svg|max:2048',

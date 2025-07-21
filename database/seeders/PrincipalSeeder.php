@@ -2,68 +2,54 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
+
 use App\Models\Principal;
 use App\Models\PrincipalPic;
 use App\Models\PrincipalAddress;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class PrincipalSeeder extends Seeder
 {
-    /**
-     * Jalankan seeder database.
-     *
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
-        DB::beginTransaction();
-        try {
-            $principals = [
-                [
-                    'name' => 'PT. Beton Jaya Abadi',
-                    'npwp' => 1234567890987654,
-                    'email' => 'bja@mail.com',
-                    'phone' => '021923212',
-                    'address' => 'Jl. Gatot Subroto No. 12',
-                    'city' => 'Jakarta Selatan',
-                    'postal_code' => '12950'
-                ],
-                [
-                    'name' => 'PT. Konstruksi Nusantara',
-                    'npwp' => 1234567890987654,
-                    'email' => 'kontara@mail.com',
-                    'phone' => '08712322322',
-                    'address' => 'Jl. Sudirman No. 45',
-                    'city' => 'Surabaya',
-                    'postal_code' => '60271'
-                ]
-            ];
+        $faker  = Faker::create('id_ID');   // locale Indonesia
+        $total  = 40;                       // berapa principal dummy ingin dibuat
 
-            foreach ($principals as $principalData) {
-                $principal = Principal::create($principalData);
+        DB::transaction(function () use ($faker, $total) {
 
-                // Tambahkan PIC untuk setiap Principal
-                PrincipalPic::create([
-                    'principal_id' => $principal->id,
-                    'name' => 'Pak '.strtolower(str_replace(' ', '', $principal->name)),
-                    'email' => 'budi.' . strtolower(str_replace(' ', '', $principal->name)) . '@example.com'
+            for ($i = 0; $i < $total; $i++) {
+
+                /* ──────── Principal ──────── */
+                $principal = Principal::create([
+                    'name'        => 'PT. ' . $faker->unique()->company,
+                    'npwp'        => $faker->numerify('###############'), // 15 digit
+                    'email'       => $faker->unique()->companyEmail,
+                    'phone'       => $faker->phoneNumber,
+                    'address'     => $faker->streetAddress,
+                    'city'        => strtoupper($faker->city),
+                    'postal_code' => $faker->postcode,
                 ]);
 
-                // Tambahkan alamat tambahan untuk proyek
+                /* ──────── PIC ──────── */
+                PrincipalPic::create([
+                    'principal_id' => $principal->id,
+                    'name'         => $faker->name('male'),
+                    'email'        => $faker->unique()->safeEmail,
+                    'phone'        => $faker->phoneNumber,
+                ]);
+
+                /* ──────── Alamat Tambahan ──────── */
                 PrincipalAddress::create([
                     'principal_id' => $principal->id,
-                    'name' => 'Representative Office - ' . $principal->city,
-                    'address' => 'Jl. Industri No. 10',
-                    'city' => $principal->city,
-                    'postal_code' => $principal->postal_code
+                    'name'         => 'Representative Office - ' . $principal->city,
+                    'address'      => $faker->streetAddress,
+                    'city'         => $principal->city,
+                    'postal_code'  => $principal->postal_code,
                 ]);
             }
 
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            echo "Error: " . $e->getMessage();
-        }
+        });
     }
 }

@@ -17,12 +17,9 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('movement_id');
             $table->uuid('product_id');
-            $table->boolean('is_meteran')->default(0);
-            $table->uuid('stock_id')->nullable(); // Satuan
-            $table->uuid('stock_meter_id')->nullable(); // Meteran
-            $table->decimal('length', 12, 2)->nullable();
             $table->bigInteger('qty')->nullable();
-
+            $table->text('description')->nullable();
+            
             $table->timestamps();
 
             $table->foreign('movement_id')
@@ -34,16 +31,6 @@ return new class extends Migration
                 ->references('id')
                 ->on('products')
                 ->onDelete('restrict');
-
-            $table->foreign('stock_id')
-                ->references('id')
-                ->on('stocks')
-                ->onDelete('restrict');
-            
-            $table->foreign('stock_meter_id')
-                ->references('id')
-                ->on('stock_meters')
-                ->onDelete('restrict');
         });
     }
 
@@ -54,6 +41,6 @@ return new class extends Migration
      */
     public function down()
     {
-        //
+        Schema::connection('osano')->dropIfExists('stock_movement_products');
     }
 };

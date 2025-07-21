@@ -74,7 +74,7 @@
                             <div class="input-group">
                                 <span class="input-group-text px-6" id="basic-addon1"><i
                                         class="ti ti-text-caption fs-6"></i></span>
-                                <input type="text" name="name" value="{{old('name')}}" class="form-control ps-2" placeholder="Name Product">
+                                <input type="text" name="name" value="{{old('name')}}" class="form-control ps-2" placeholder="Nama Bal">
                             </div>
                             @error('name')
                                 <span class="invalid-feedback" role="alert">
@@ -89,7 +89,7 @@
                                 <span class="input-group-text px-6" id="basic-addon1"><i
                                         class="ti ti-align-justified fs-6"></i></span>
                                 <textarea class="form-control ps-2" name="description" id="description" cols="20" rows="5"
-                                    placeholder="Description about this Product">{{old('description')}}</textarea>
+                                    placeholder="Description about this Product">{{old('description', request()->get('desc'))}}</textarea>
                             </div>
                             @error('description')
                                 <span class="invalid-feedback" role="alert">
@@ -98,49 +98,69 @@
                             @enderror
                         </div>
                         <div class="p-3 rounded-3 bg-primary-subtle mb-2">
-                            <label for="product_type_id" class="form-label">Tipe Produk</label>
-                            <div class="input-group mb-3">
-                                <span class="input-group-text px-6" id="basic-addon1"><i
-                                        class="ti ti-package fs-6"></i></span>
-                                <div style="flex-grow:1">
-                                    <select name="product_type_id" id="product_type_id" class="select2-normal form-select">
-                                        <option value="">-- Pilih Tipe Produk --</option>
-                                        @foreach ($product_types as $product_type)
-                                            <option value="{{$product_type->id}}" {{ $product_type->id == old('product_type_id') ? 'selected' : '' }}>
-                                                {{ $product_type->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-
                             <div class="mb-3">
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" name="is_for_purchase" type="checkbox" value="1" id="is_for_purchase" {{ request()->filled('purchase_order') ? 'checked' : ''}} />
-                                    <label class="form-check-label" for="is_for_purchase">Bal ini dari Pembelian Principal</label>
+                                    <input class="form-check-input" name="is_from_receive" type="checkbox" value="1" id="is_from_receive" {{ request()->filled('receive') ? 'checked' : ''}} />
+                                    <label class="form-check-label" for="is_from_receive">Bal ini dari Penerimaan Pembelian</label>
                                 </div>
                             </div>
-                            <div id="purchase" class="d-none">
-                                <label for="purchase_order_id" class="form-label">Pembelian Principal / Purchase Order</label>
+                            <!-- Select Purchase Order -->
+                            <div id="switchbox" class="{{ request()->filled('receive') ? '' : 'd-none' }}">
+                                <label for="purchase_receive_id" class="form-label">Penerimaan Stock / Pembelian</label>
                                 <div class="input-group mb-2">
-                                    <span class="input-group-text px-6" id="basic-addon1"><i
-                                            class="ti ti-package fs-6"></i></span>
+                                    <span class="input-group-text px-6"><i class="ti ti-package fs-6"></i></span>
                                     <div style="flex-grow:1">
-                                        <select name="purchase_order_id" id="purchase_order" class="select2-normal form-select">
-                                            <option value="">-- Pilih Pembelian --</option>
-                                            @foreach ($purchase_orders as $purchase_order)
-                                                <option value="{{$purchase_order->id}}" {{ $purchase_order->id == old('purchase_order_id') ? 'selected' : '' }}>
-                                                    {{ $purchase_order->name }}
+                                        <select name="purchase_receive_id" id="receive" class="select2-normal form-select">
+                                            <option value="">-- Pilih Penerimaan --</option>
+                                            @foreach ($receives as $receive)
+                                                <option value="{{ $receive->id }}"
+                                                    {{ $receive->id == old('purchase_receive_id', request()->get('receive')) ? 'selected' : '' }}>
+                                                    {{ $receive->code . ' - ' . \Carbon\Carbon::parse($receive->date)->format('d M Y') }}
                                                 </option>
                                             @endforeach
                                         </select>
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
-                                    Tidak menemukan Pembelian ? 
-                                    <a href="" class="btn btn-sm text-primary bg-primary-subtle"
-                                        >Tambah Pembelian</a>
+                                    Tidak menemukan Penerimaan?
+                                    <a href="{{ route('receive.add') }}" class="btn btn-sm text-primary bg-primary-subtle">Tambah Penerimaan Pembelian</a>
                                 </div>
+                            </div>
+
+                            <div>
+                                <label for="nowin_id" class="form-label">Lokasi Barang</label>
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text px-6"><i class="ti ti-map-pin fs-6"></i></span>
+                                    <div style="flex-grow:1">
+                                        <select name="nowin_id" id="nowin_id" class="select2-normal form-select">
+                                            <option value="">-- Pilih Gudang / Toko --</option>
+                                            @foreach ($warehouses as $warehouse)
+                                                <option value="{{ $warehouse->id }}"
+                                                    {{ $warehouse->id == old('nowin_id', request()->get('nowin_id')) ? 'selected' : '' }}>
+                                                    {{ '[Gudang] '.$warehouse->name.' | '.$warehouse->address }}
+                                                </option>
+                                            @endforeach
+                                            @foreach ($stores as $store)
+                                                <option value="{{ $store->id }}"
+                                                    {{ $store->id == old('nowin_id', request()->get('nowin_id')) ? 'selected' : '' }}>
+                                                    {{ '[Toko] '.$store->name.' | '.$store->address }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Container Produk -->
+                            <div class="p-4 border-2 border-dashed rounded-3 mt-3">
+                                <h6>Bal ini Berisi Produk</h6>
+                                <div class="fs-1 fst-italic"><span class="text-danger">*</span> Jika Bal dari Penerimaan Pembelian maka akan menampilkan data product otomatis dari Penerimaan yang dipilih</div>
+                                <div id="product-container">
+                                    {{-- Produk akan diisi secara dinamis --}}
+                                </div>
+                                <button type="button" id="add-product" class="btn btn-sm btn-secondary mt-2">
+                                    <i class="ti ti-plus"></i> Tambah Produk Manual
+                                </button>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">
@@ -168,6 +188,87 @@
                 let modal = $(this).closest('.modal'); // Cari modal terdekat
                 $(this).select2();
             });
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            // Ketika purchase order diubah
+            
+            $('#receive').on('change', function () {
+                const id = $(this).val();
+                if (!id) return;
+
+                $.get(`/receive/${id}/products`, function (data) {
+                    let html = '';
+
+                    data.forEach((prod) => {
+                        html += `
+                            <div class="d-flex mb-1 flex-1 w-100 align-items-center gap-2 flex-wrap">
+                                <input type="hidden" name="product_id[]" value="${prod.product_id}">
+                                <img src="${ prod.image }"
+                                    class="rounded-2" alt="product Image ${prod.name}" style="width: 4em" />
+                                <div class="">
+                                    <div class="fs-1 badge shadow-sm mb-1 bg-primary-subtle text-primary">${prod.type}</div>
+                                    <h6 class="fw-semibold mb-1" style="white-space: normal !important">${prod.name}</h6>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div><i class="ti ti-arrow-up"></i> ${prod.height} cm</div>
+                                        <div><i class="ti ti-arrow-right"></i> ${prod.width} cm</div>
+                                    </div>
+                                </div>
+                                <div class="ms-auto">
+                                    <div class="fs-2 mb-1">Qty. (available ${prod.qty})</div>
+                                    <input type="number" class="form-control " style="max-width:10em" name="qty[]" value="0" max="${prod.qty}" placeholder="${prod.qty}">
+                                </div>
+                            </div>`;
+                    });
+
+                    $('#product-container').html(html);
+                });
+            });
+
+            // Ambil nilai purchase_order dari query string
+            let purchaseReceive = @json(request()->get('receive'));
+
+            if (purchaseReceive) {
+                $('#receive').val(purchaseReceive).trigger('change');
+            }
+
+            // Hapus baris produk
+            $(document).on('click', '.remove-row', function () {
+                $(this).closest('.product-row').remove();
+            });
+
+            // Tambah produk manual
+            let productCounter = 0;
+            $('#add-product').on('click', function () {
+                productCounter++; // Tambah counter setiap klik
+
+                let manual = `
+                    <div class="d-flex flex-wrap align-items-end gap-2 mb-3 product-row">
+                        <div style="width:100%; max-width:30em">
+                            <select name="product_id[]" id="select_product_${productCounter}" class="form-select">
+                                <option value="">-- Pilih Produk --</option>
+                                @foreach ($products as $product)
+                                    <option value="{{ $product->id }}">
+                                        {{ $product->name }} - Jual {{ formatRupiah($product->price_per_unit) }} / {{ $product->unit->code }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <div class="fs-1 mb-1 text-dark">Sebanyak</div>
+                            <input type="number" class="form-control bg-white" name="qty[]" value="0" placeholder="Sebanyak" style="max-width:10em">
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger remove-row"><i class="ti ti-trash"></i></button>
+                    </div>`;
+                $('#product-container').append(manual);
+            
+                // Inisialisasi select2 setelah ditambahkan
+                $(`#select_product_${productCounter}`).select2({
+                    dropdownParent: $('#product-container') // opsional jika select2 di modal
+                });
+            });
+
         });
     </script>
     <script>
@@ -202,12 +303,12 @@
                 $('input[name="slug"]').val(makeSlug(name));
             });
 
-            $('input[name="is_for_purchase"]').on('change', function(){
+            $('input[name="is_from_receive"]').on('change', function(){
                 let check = $(this).is(':checked');
                 if(check) {
-                    $('#purchase').removeClass('d-none');
+                    $('#switchbox').removeClass('d-none');
                 }else{
-                    $('#purchase').addClass('d-none');
+                    $('#switchbox').addClass('d-none');
                 }
             })
         });

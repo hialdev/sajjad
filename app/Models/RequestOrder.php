@@ -92,7 +92,7 @@ class RequestOrder extends Model
             $requestedQty = $requestProduct->qty;
 
             // Ambil semua PurchaseOrder terkait dengan RequestOrder ini, kecuali status 0 (pending)
-            $processedPurchases = $this->purchaseOrders()
+            $processedPurchases = $this->requestProcess()
                 ->where('status', '!=', '0')
                 ->with('products')
                 ->get();
@@ -195,7 +195,7 @@ class RequestOrder extends Model
         return $this->hasMany(RequestOrderInvoice::class, 'request_order_id');
     }
 
-    public function purchaseOrders(){
-        return $this->hasMany(PurchaseOrder::class, 'request_order_id');
+    public function requestProcess(){
+        return $this->hasMany(RequestProcess::class, 'request_order_id');
     }
 }

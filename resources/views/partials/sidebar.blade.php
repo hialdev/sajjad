@@ -31,6 +31,14 @@
                         <span class="hide-menu">Dashboard</span>
                     </a>
                 </li>
+                <li class="sidebar-item {{ Route::is('stock.index') ? 'selected' : '' }}">
+                    <a href="{{ route('stock.index') }}" class="sidebar-link" aria-expanded="false">
+                        <span>
+                            <i class="ti ti-chart-area-line"></i>
+                        </span>
+                        <span class="hide-menu">Stock Management</span>
+                    </a>
+                </li>
 
                 
                 @if(auth()->user() && auth()->user()->getRoleNames()[0] != 'pelanggan')
@@ -66,7 +74,7 @@
                         </ul>
                     </li>
                     
-                    <li class="sidebar-item {{ Route::is('bal.*') && !Route::is('bal.unpack.*') ? 'selected' : '' }}">
+                    <li class="sidebar-item {{ Route::is('bal.*') ? 'selected' : '' }}">
                         <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
                             <span class="d-flex">
                                 <i class="ti ti-circles"></i>
@@ -88,6 +96,33 @@
                                         <i class="ti ti-circle"></i>
                                     </div>
                                     <span class="hide-menu">Tambah Bal</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="sidebar-item {{ Route::is('payment.*') ? 'selected' : '' }}">
+                        <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
+                            <span class="d-flex">
+                                <i class="ti ti-credit-card"></i>
+                            </span>
+                            <span class="hide-menu">Payment</span>
+                        </a>
+                        <ul aria-expanded="false" class="collapse first-level">
+                            <li class="sidebar-item">
+                                <a href="{{ route('payment.index') }}" class="sidebar-link">
+                                    <div class="round-16 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-circle"></i>
+                                    </div>
+                                    <span class="hide-menu">Semua Payment</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{{ route('payment.add') }}" class="sidebar-link">
+                                    <div class="round-16 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-circle"></i>
+                                    </div>
+                                    <span class="hide-menu">Tambah Payment</span>
                                 </a>
                             </li>
                         </ul>
@@ -358,25 +393,43 @@
                         </ul>
                     </li>
 
-                    <li class="sidebar-item {{ Route::is('bal.unpack.*') ? 'selected' : '' }}">
-                        <a href="{{ route('bal.unpack.index') }}" class="sidebar-link" aria-expanded="false">
-                            <span>
-                                <i class="ti ti-circles"></i>
-                            </span>
-                            <span class="hide-menu">Pembongkaran Bal</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-item {{ Route::is('purchase-order.*') && !Route::is('purchase-order.invoice*') ? 'selected' : '' }}">
+                    <li class="sidebar-item {{ Route::is('receive.*') && !Route::is('receive.invoice*') ? 'selected' : '' }}">
                         <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
                             <span class="d-flex">
-                                <i class="ti ti-building-store"></i>
+                                <i class="ti ti-receipt"></i>
                             </span>
-                            <span class="hide-menu">Distribusi ke Toko</span>
+                            <span class="hide-menu">Penerimaan Barang</span>
                         </a>
                         <ul aria-expanded="false" class="collapse first-level">
                             <li class="sidebar-item">
-                                <a href="{{ route('purchase-order.index') }}" class="sidebar-link">
+                                <a href="{{ route('receive.index') }}" class="sidebar-link">
+                                    <div class="round-16 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-circle"></i>
+                                    </div>
+                                    <span class="hide-menu">Semua Penerimaan</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{{ route('receive.add') }}" class="sidebar-link">
+                                    <div class="round-16 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-circle"></i>
+                                    </div>
+                                    <span class="hide-menu">Tambah Baru</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="sidebar-item {{ Route::is('stock.*') && !Route::is('stock.index') ? 'selected' : '' }}">
+                        <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
+                            <span class="d-flex">
+                                <i class="ti ti-truck-delivery"></i>
+                            </span>
+                            <span class="hide-menu">Distribusi Stock</span>
+                        </a>
+                        <ul aria-expanded="false" class="collapse first-level">
+                            <li class="sidebar-item">
+                                <a href="{{ route('stock.distribution') }}" class="sidebar-link">
                                     <div class="round-16 d-flex align-items-center justify-content-center">
                                         <i class="ti ti-circle"></i>
                                     </div>
@@ -384,11 +437,11 @@
                                 </a>
                             </li>
                             <li class="sidebar-item">
-                                <a href="{{ route('purchase-order.add') }}" class="sidebar-link">
+                                <a href="{{ route('stock.move') }}" class="sidebar-link">
                                     <div class="round-16 d-flex align-items-center justify-content-center">
                                         <i class="ti ti-circle"></i>
                                     </div>
-                                    <span class="hide-menu">Tambah Baru</span>
+                                    <span class="hide-menu">Distribusi Baru</span>
                                 </a>
                             </li>
                         </ul>
@@ -424,7 +477,33 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="sidebar-item {{ Route::is('request-order.*') && !Route::is('request-order.invoice*') ? 'selected' : '' }}">
+                    <li class="sidebar-item {{ Route::is('request-process.*') && !Route::is('request-process.invoice*') ? 'selected' : '' }}">
+                        <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
+                            <span class="d-flex">
+                                <i class="ti ti-atom-2"></i>
+                            </span>
+                            <span class="hide-menu">Proses Permintaan</span>
+                        </a>
+                        <ul aria-expanded="false" class="collapse first-level">
+                            <li class="sidebar-item">
+                                <a href="{{ route('request-process.index') }}" class="sidebar-link">
+                                    <div class="round-16 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-circle"></i>
+                                    </div>
+                                    <span class="hide-menu">Semua Permrosesan</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{{ route('request-process.add') }}" class="sidebar-link">
+                                    <div class="round-16 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-circle"></i>
+                                    </div>
+                                    <span class="hide-menu">Tambah Baru</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item {{ Route::is('customer-order.*') && !Route::is('customer-order.invoice*') ? 'selected' : '' }}">
                         <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
                             <span class="d-flex">
                                 <i class="ti ti-heart-handshake"></i>
@@ -432,8 +511,9 @@
                             <span class="hide-menu">Penjualan Instan</span>
                         </a>
                         <ul aria-expanded="false" class="collapse first-level">
+                            
                             <li class="sidebar-item">
-                                <a href="{{ route('request-order.index') }}" class="sidebar-link">
+                                <a href="{{ route('customer-order.index') }}" class="sidebar-link">
                                     <div class="round-16 d-flex align-items-center justify-content-center">
                                         <i class="ti ti-circle"></i>
                                     </div>
@@ -441,7 +521,15 @@
                                 </a>
                             </li>
                             <li class="sidebar-item">
-                                <a href="{{ route('request-order.add') }}" class="sidebar-link">
+                                <a href="{{ route('customer-order.partner.index') }}" class="sidebar-link">
+                                    <div class="round-16 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-circle"></i>
+                                    </div>
+                                    <span class="hide-menu">Semua Hutang ke Partner</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{{ route('customer-order.add') }}" class="sidebar-link">
                                     <div class="round-16 d-flex align-items-center justify-content-center">
                                         <i class="ti ti-circle"></i>
                                     </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\City;
 use App\Models\Store;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 
 class StoreController extends Controller
@@ -23,7 +24,7 @@ class StoreController extends Controller
         $cities = City::orderBy('city_name', 'asc')->get();
         return view('stores.add', compact('cities'));
     }
-
+    
     public function store(Request $request){
         $request->validate([
             'image' => 'nullable|image|mimes:webp,png,jpg,jpeg,jfif,svg|max:2048',
@@ -64,6 +65,11 @@ class StoreController extends Controller
         $store = Store::findOrFail($id);
         $cities = City::orderBy('city_name', 'asc')->get();
         return view('stores.edit', compact('cities', 'store'));
+    }
+
+    public function stock($id){
+        $store = Store::findOrFail($id);
+        return view('stores.stock', compact('store'));
     }
 
     public function update($id, Request $request){

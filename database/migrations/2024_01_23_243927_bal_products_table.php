@@ -13,21 +13,22 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::connection('osano')->create('store_stock_meters', function (Blueprint $table) {
+        Schema::connection('osano')->create('bal_products', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('store_id');
-            $table->uuid('stock_meter_id');
+            $table->uuid('bal_id');
+            $table->uuid('product_id');
+            $table->bigInteger('qty');
             
             $table->timestamps();
 
-            $table->foreign('store_id')
+            $table->foreign('bal_id')
                 ->references('id')
-                ->on('stores')
+                ->on('bals')
                 ->onDelete('restrict');
-                
-            $table->foreign('stock_meter_id')
+
+            $table->foreign('product_id')
                 ->references('id')
-                ->on('stock_meters')
+                ->on('products')
                 ->onDelete('restrict');
         });
     }
@@ -39,6 +40,6 @@ return new class extends Migration
      */
     public function down()
     {
-        //
+        Schema::connection('osano')->dropIfExists('bal_products');
     }
 };

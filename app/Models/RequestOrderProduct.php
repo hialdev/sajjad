@@ -35,4 +35,28 @@ class RequestOrderProduct extends Model
     public function requestOrder(){
         return $this->belongsTo(RequestOrder::class, 'request_order_id');
     }
+
+    public function getRemainingQtyAttribute()
+    {
+        // Total qty yang diminta pada RequestOrderProduct ini
+        $totalRequested = $this->qty;
+
+        // Hitung total qty yang sudah diproses pada semua RequestProcessProduct dengan product_id & request_order_id yang sama
+        $processedQty = \App\Models\RequestProcessProduct::where('product_id', $this->product_id)
+            ->whereHas('requestProcess', function ($q) {
+                $q->where('request_order_id', $this->request_order_id);
+            })
+            ->sum('qty');
+
+        return max(0, $totalRequested - $processedQty);
+    }
+
+    // Relasi ke RequestProcessProduct
+    public function requestProcessProducts()
+    {
+        return $this->hasMany(\App\Models\RequestProcessProduct::class, 'product_id', 'product_id')
+            ->whereHas('requestProcess', function ($q) {
+                $q->where('request_order_id', $this->request_order_id);
+            });
+    }
 }

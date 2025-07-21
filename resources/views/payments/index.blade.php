@@ -6,13 +6,13 @@
         <div class="card-body px-4 py-3">
             <div class="row align-items-center">
                 <div class="col-9">
-                    <h4 class="fw-semibold mb-8">Bal</h4>
+                    <h4 class="fw-semibold mb-8">Payment</h4>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item">
                                 <a class="text-muted text-decoration-none" href="{{ route('home') }}">Dashboard</a>
                             </li>
-                            <li class="breadcrumb-item" aria-current="page">Semua Bal</li>
+                            <li class="breadcrumb-item" aria-current="page">Semua Payment</li>
                         </ol>
                     </nav>
                 </div>
@@ -26,17 +26,17 @@
     </div>
 
     <div class="mb-3 d-flex align-items-center gap-2 justify-content-between">
-        <h1>Bal</h1>
+        <h1>Payment</h1>
         <div style="aspect-ratio:1/1; width:3em; height:3em"
             class="bg-primary text-white d-flex align-items-center justify-content-center rounded-5 me-auto">
-            {{ count($bals) }}</div>
-        <a href="{{ route('bal.add') }}" class="btn btn-primary btn-al-primary">Tambah</a>
+            {{ count($payments) }}</div>
+        <a href="{{ route('payment.add') }}" class="btn btn-primary btn-al-primary">Tambah</a>
         {{-- <a href="{{route('pdf.preview.blade', ['bladePath' => 'products.stok'])}}" target="_blank" class="btn btn-danger"><i class="ti ti-file-download me-2"></i>Laporan Stok</a> --}}
     </div>
 
     <div class="card">
         <div class="card-body">
-            <form action="{{route('bal.index')}}" method="GET">
+            <form action="{{route('payment.index')}}" method="GET">
                 <div class="row align-items-end mb-3 flex-wrap">
                     <div class="col-md-4 mb-2">
                         <label for="search" class="form-label">Filter Kata</label>
@@ -74,16 +74,16 @@
                     <thead class="text-dark fs-4">
                         <tr>
                             <th>
-                                <h6 class="fs-3 fw-semibold mb-0">Bal</h6>
+                                <h6 class="fs-3 fw-semibold mb-0">Bank</h6>
                             </th>
                             <th>
                                 <h6 class="fs-3 fw-semibold mb-0">Deskripsi</h6>
                             </th>
                             <th>
-                                <h6 class="fs-3 fw-semibold mb-0">Pembongkaran</h6>
+                                <h6 class="fs-3 fw-semibold mb-0">Account Detail</h6>
                             </th>
                             <th>
-                                <h6 class="fs-3 fw-semibold mb-0">Purchase Order</h6>
+                                <h6 class="fs-3 fw-semibold mb-0">Status</h6>
                             </th>
                             <th>
                                 <h6 class="fs-3 fw-semibold mb-0">Timestamp</h6>
@@ -92,41 +92,65 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($bals as $bal)
+                        @forelse ($payments as $payment)
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ $bal->image ? asset('/storage/'.$bal->image) : '/assets/images/profile/user-1.jpg' }}"
-                                            class="rounded-2" alt="product Image {{ $bal->name }}" style="width: 4em" />
+                                        <img src="{{ $payment->image ? asset('/storage/'.$payment->image) : '/assets/images/profile/user-1.jpg' }}"
+                                            class="rounded-2" alt="product Image {{ $payment->bank_name }}" style="width: 4em" />
                                         <div class="ms-3">
-                                            <div class="badge bg-primary fs-1 mb-1 text-white">{{ $bal->code }}</div>
-                                            <h6 class="fw-semibold mb-1" style="white-space: normal !important">{{ $bal->name }}</h6>
+                                            <div class="badge bg-primary fs-1 mb-1 text-white">{{ $payment->code }}</div>
+                                            <h6 class="fw-semibold mb-1" style="white-space: normal !important">{{ $payment->bank_name }}</h6>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="fw-normal" style="white-space:normal; font-size:13px; ">{{ $bal->description ?? 'Tidak ada deskripsi'}}</div>    
+                                    <div class="mb-2">
+                                        @php
+                                        $status = [
+                                            '0' => ['label' => 'Tidak Aktif','color' => 'danger'],
+                                            '1' => ['label' => 'Aktif','color' => 'success'],
+                                        ];
+                                        @endphp
+                                        <div class="fw-normal fs-1 text-muted" style="">Status Keaktifan</div>
+                                        <h6 class="fw-semibold fs-2 text-{{ $status[$payment->is_active]['color'] }} mb-1" style="">{{ $status[$payment->is_active]['label'] }}</h6>
+                                    </div>
+                                    <div class="fw-normal" style="white-space:normal; font-size:13px; ">{{ $payment->description ?? 'Tidak ada deskripsi'}}</div>    
                                 </td>
                                 <td>
-                                    @if($bal->is_unpack && $bal->unpack)
-                                    @else
-                                    <a href="{{route('bal.unpack.add', $bal->id)}}" class="btn btn-primary-subtle bg-primary-subtle btn-sm d-block">Bongkar</a>
-                                    @endif
+                                    <div>
+                                       <div class="fw-normal fs-1 text-muted" style="">Account Name
+                                       </div>
+                                       <h6 class="fw-semibold fs-2 mb-1" style="">{{ $payment->account_name }}</h6>
+                                    </div>
+                                    <div>
+                                       <div class="fw-normal fs-1 text-muted" style="">Account Number
+                                       </div>
+                                       <h6 class="fw-semibold fs-2 mb-1" style="">{{ $payment->account_number }}</h6>
+                                    </div>
                                 </td>
                                 <td>
-                                    @if($bal->is_unpack && $bal->unpack)
-                                    @else
-                                    <div class="fs-2">Tidak ada Pembelian</div>
-                                    @endif
+                                    <div>
+                                        @php
+                                        $types = [
+                                            'bank' => ['label' => 'Bank Transfer','color' => 'secondary'],
+                                            'qris' => ['label' => 'QRIS','color' => 'warning'],
+                                        ];
+                                        @endphp
+
+                                        <div class="fw-normal fs-1 text-muted" style="">Tipe Rekening
+                                        </div>
+                                        <h6 class="fw-semibold fs-2 text-{{ $types[$payment->type]['color'] }} mb-1" style="">{{ $types[$payment->type]['label'] }}</h6>
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column align-items-start gap-2">
                                         <div class="badge bg-success-subtle text-success rounded-3 fw-semibold fs-2">Updated
                                             at
-                                            : {{ $bal->updated_at }}</div>
+                                            : {{ $payment->updated_at }}</div>
                                         <div class="badge bg-primary-subtle text-primary rounded-3 fw-semibold fs-2">Created
                                             at
-                                            : {{ $bal->created_at }}</div>
+                                            : {{ $payment->created_at }}</div>
                                     </div>
                                 </td>
                                 <td>
@@ -137,16 +161,12 @@
                                         </a>
                                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                             <li>
-                                                <a href="{{route('bal.index', $bal->stock?->id)}}" class="dropdown-item d-flex align-items-center gap-3"><i
-                                                        class="fs-4 ti ti-eye"></i>View</a>
-                                            </li>
-                                            <li>
-                                                <a href="{{route('bal.edit', $bal->id)}}" class="dropdown-item d-flex align-items-center gap-3"><i
+                                                <a href="{{route('payment.edit', $payment->id)}}" class="dropdown-item d-flex align-items-center gap-3"><i
                                                         class="fs-4 ti ti-edit"></i>Edit</a>
                                             </li>
                                             <li>
                                                 <button type="button" class="dropdown-item d-flex align-items-center gap-3"
-                                                    data-bs-toggle="modal" data-bs-target="#deleteModal-{{$bal->id}}"><i
+                                                    data-bs-toggle="modal" data-bs-target="#deleteModal-{{$payment->id}}"><i
                                                         class="fs-4 ti ti-trash"></i>Delete</button>
                                             </li>
                                         </ul>
@@ -154,26 +174,26 @@
 
 
                                     <!-- Delete Modal -->
-                                    <div id="deleteModal-{{$bal->id}}" class="modal fade" tabindex="-1"
+                                    <div id="deleteModal-{{$payment->id}}" class="modal fade" tabindex="-1"
                                         aria-labelledby="danger-header-modalLabel" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
                                             <div class="modal-content p-3 modal-filled bg-danger">
                                                 <div class="modal-header modal-colored-header text-white">
                                                     <h4 class="modal-title text-white" id="danger-header-modalLabel">
-                                                        Yakin ingin menghapus product ?
+                                                        Yakin ingin menghapus Bal ?
                                                     </h4>
                                                     <button type="button" class="btn-close btn-close-white"
                                                         data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body" style="width: fit-content; white-space:normal">
-                                                    <h5 class="mt-0 text-white">Product {{$bal->title}} akan dihapus</h5>
-                                                    <p class="text-white">Segala data yang berkaitan dengan product tersebut juga akan dihapus secara permanen.</p>
+                                                    <h5 class="mt-0 text-white">Bal {{$payment->name}} akan dihapus</h5>
+                                                    <p class="text-white">Segala data yang berkaitan dengan Bal tersebut juga akan dihapus secara permanen.</p>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                                                         Close
                                                     </button>
-                                                    <form action="{{route('bal.destroy', $bal->id)}}" method="POST">
+                                                    <form action="{{route('payment.destroy', $payment->id)}}" method="POST">
                                                       @csrf
                                                       @method('delete')
                                                       <button type="submit" class="btn btn-dark">Ya, Hapus</button>

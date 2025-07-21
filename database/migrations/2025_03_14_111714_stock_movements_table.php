@@ -19,8 +19,10 @@ return new class extends Migration
             $table->date('date');
             $table->text('image')->nullable();
             $table->uuid('transport_id')->nullable();
-            $table->uuid('warehouse_id');
-            $table->uuid('store_id');
+            $table->enum('from_type', ['store', 'warehouse']);
+            $table->uuid('from_id');
+            $table->enum('to_type', ['store', 'warehouse']);
+            $table->uuid('to_id');
             $table->uuid('user_id')->nullable(); // Employee
             $table->text('description')->nullable();
             $table->enum('status', [0,1,2])->default(0);
@@ -30,11 +32,6 @@ return new class extends Migration
             $table->foreign('transport_id')
                 ->references('id')
                 ->on('transports')
-                ->onDelete('restrict');
-
-            $table->foreign('warehouse_id')
-                ->references('id')
-                ->on('warehouses')
                 ->onDelete('restrict');
 
         });
@@ -47,6 +44,6 @@ return new class extends Migration
      */
     public function down()
     {
-        //
+        Schema::connection('osano')->dropIfExists('stock_movements');
     }
 };

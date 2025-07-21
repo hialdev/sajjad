@@ -90,7 +90,7 @@
             </div>
             <div class="step" data-step="2">
                 <div class="circle">2</div>
-                <div class="label fs-2">Alamat Pabrik / Lainnya</div>
+                <div class="label fs-2">Alamat Lainnya</div>
                 <div class="line"></div>
             </div>
             <div class="step" data-step="3">
@@ -153,7 +153,7 @@
                                 <div class="fw-normal text-muted" style="white-space:normal; font-size:13px; ">{{ $partner->description ?? 'Tidak ada deskripsi' }}</div>    
                             </div>
                             <div class="ms-auto">
-                                <a href="#alamat-pabrik" class="btn btn-light btn-sm rounded-pill p-2 px-3 mb-2"><i class="ti ti-map-2 fs-3 me-2"></i>{{ $partner->addresses->count() }} Alamat Pabrik / Lainnya</a>
+                                <a href="#alamat-pabrik" class="btn btn-light btn-sm rounded-pill p-2 px-3 mb-2"><i class="ti ti-map-2 fs-3 me-2"></i>{{ $partner->addresses->count() }} Alamat Lainnya</a>
                             </div>
                         </div>
                         <div class="text-dark mb-2">
@@ -388,7 +388,7 @@
             <div class="step-content" data-step="2" style="display: none;">
                 <div class="d-flex mb-3 align-items-center gap-3">
                     <i class="ti ti-map-2 fs-8"></i>
-                    <h5 class="mb-0">Alamat Pabrik / Lainnya</h5>
+                    <h5 class="mb-0">Alamat Lainnya</h5>
                     <div class="d-flex align-items-center justify-content-center bg-primary text-white p-2 rounded-circle" style="aspect-ratio:1/1; width:2.5em; height:2.5em">{{ count($partner->addresses) }}</div>
                     @if($partner->addresses->count() > 0)
                     <div class="ms-auto">
@@ -447,6 +447,7 @@
                     </div>
                     @endforeach
                 </div>
+                
                 @if($partner->addresses->count() > 0)
                 <!-- Add Address modal -->
                 <div class="modal fade " id="addAddressOtherModal" tabindex="-1" aria-labelledby="vertical-center-modal"

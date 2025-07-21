@@ -18,9 +18,6 @@ return new class extends Migration
             $table->uuid('request_order_id');
             $table->uuid('product_id')->nullable();
 
-            $table->boolean('is_meteran')->default(0);
-            $table->uuid('stock_id')->nullable(); // Satuan
-            $table->uuid('stock_meter_id')->nullable(); // Meteran
             $table->decimal('length', 12, 2)->nullable();
             $table->bigInteger('qty')->nullable();
 
@@ -38,15 +35,6 @@ return new class extends Migration
                 ->on('products')
                 ->onDelete('restrict');
 
-            $table->foreign('stock_id')
-                ->references('id')
-                ->on('stocks')
-                ->onDelete('restrict');
-
-            $table->foreign('stock_meter_id')
-                ->references('id')
-                ->on('stock_meters')
-                ->onDelete('restrict');
                  
         });
     }

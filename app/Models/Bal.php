@@ -26,6 +26,9 @@ class Bal extends Model
             $model->code = static::getCode();
         });
         static::deleting(function ($model) {
+            if ($model->unpack) $model->unpack->delete();
+            if ($model->products->count() > 0) $model->products()->delete();
+
             if ($model->image) {
                 Storage::disk('public')->delete($model->image);
             }
@@ -44,7 +47,30 @@ class Bal extends Model
         return generateCode($type, $newNumber); // Fungsi generateCode dengan nilai default
     }
 
+    public function receive(){
+        return $this->belongsTo(PurchaseReceive::class, 'purchase_receive_id');
+    }
+
     public function unpack(){
         return $this->hasOne(BalUnpack::class, 'bal_id');
+    }
+
+    public function products(){
+        return $this->hasMany(BalProduct::class, 'bal_id');
+    }
+
+    public function nowin(){
+        $type = $this->nowin_type;
+        switch ($type) {
+            case 'warehouse':
+                return $this->belongsTo(Warehouse::class,'nowin_id','id');
+                break;
+            case 'store':
+                return $this->belongsTo(Store::class,'nowin_id','id');
+                break;
+            default:
+                return null;
+                break;
+        }
     }
 }
