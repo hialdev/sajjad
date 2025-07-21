@@ -161,7 +161,9 @@
             </div>
             <div class="col-6 col-md-3 mb-4 d-flex justify-content-end align-items-start gap-2">
                 <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRequestOrder-{{$reqorder->id}}"><i class="ti ti-trash"></i> <span class="ms-1 d-none d-md-inline-block">Hapus</span></button>
-                <a href="{{route('request-order.getInvoice', ['id' => $reqorder->invoice->id])}}" class="btn btn-danger" style="background:rgb(186, 55, 55); border-color:rgb(186, 55, 55)"><i class="ti ti-printer"></i></a>
+                @if($reqorder->invoice)
+                  <a href="{{route('request-order.getInvoice', ['id' => $reqorder->invoice->id])}}" class="btn btn-danger" style="background:rgb(186, 55, 55); border-color:rgb(186, 55, 55)"><i class="ti ti-printer"></i></a>
+                @endif
             </div>
 
             <!-- Delete Modal -->

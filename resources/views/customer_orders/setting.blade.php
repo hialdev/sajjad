@@ -746,7 +746,7 @@
                                              </div>
                                           </div>
                                           
-                                          <div class="mt-2 {{$cart->stockCountIn() > 0 || $codproduct->store_id ? '' : 'd-none'}}" id="store_input_{{$loop->index}}">
+                                          <div class="mt-2 {{$cart->stockCountIn() > 0 || $codproduct?->store_id != null ? '' : 'd-none'}}" id="store_input_{{$loop->index}}">
                                              <label class="form-label fw-semibold fs-2">Mengambil Dari Toko</label>
                                              <div class="input-group">
                                                    <span class="input-group-text px-6" id="basic-addon1"><i
@@ -773,7 +773,7 @@
                                              @enderror
                                           </div>
 
-                                          <div class="{{$cart->stockCountIn() > 0 || $codproduct->store_id ? 'd-none' : ''}} mt-2" id="partner_input_{{$loop->index}}">
+                                          <div class="{{$cart->stockCountIn() > 0 || $codproduct?->store_id != null ? 'd-none' : ''}} mt-2" id="partner_input_{{$loop->index}}">
                                              <label class="form-label fw-semibold fs-2">Mengambil Dari Partner</label>
                                              <div class="input-group">
                                                    <span class="input-group-text px-6" id="basic-addon1"><i
