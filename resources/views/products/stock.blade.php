@@ -60,7 +60,8 @@
     </div>
 
     <div class="row">
-        <div class="col-md-6">
+        @if($product->getAnalyticAndLocations()['warehouse'] != null || $product->getAnalyticAndLocations()['store'] != null)
+         <div class="col-md-6">
             <div class="card shadow-none bg-light">
                 <div class="card-body">
                     <div class="fs-5 fw-bold"><i class="ti ti-building-warehouse me-2"></i> Gudang</div>
@@ -150,6 +151,15 @@
                 </div>
             </div>
         </div>
+        @else
+        <div class="col-12">
+         <div class="card">
+            <div class="card-body">
+               Tidak ada data sebaran
+            </div>
+         </div>
+        </div>
+        @endif
     </div>
 
 @endsection

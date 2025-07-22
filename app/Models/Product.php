@@ -103,7 +103,10 @@ class Product extends Model
    }
 
    public function getAnalyticAndLocations(){
-      $analytics = [];
+      $analytics = [
+         'warehouse' => [],
+         'store' => [],
+      ];
       if ($this->type->type == 'satuan'){
          $anSatuan = Stock::analyticLocationsFromProduct($this->id);
          // #attributes: array:6 [▼
