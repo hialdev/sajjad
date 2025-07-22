@@ -759,7 +759,7 @@
                                                       >
                                                          <option value="">-- Pilih Store --</option>
                                                          @foreach ($stores as $store)
-                                                               @if((int) $store->getProductRemaining($item['id'] > 0))
+                                                               @if((int) $store->getProductRemaining($item['id']) > 0)
                                                                   <option value="{{$store->id}}" {{$store->id == old('store_id['.$loop->index.']', $codproduct?->store_id) ? 'selected' : ''}} style="white-space:normal !important">{{ "{$store->name}, {$store->address} - {$store->city}" }}</option>
                                                                @endif
                                                          @endforeach
