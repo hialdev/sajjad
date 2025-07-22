@@ -90,6 +90,23 @@ class Stock extends Model
             ->keyBy('nowin_id');
     }
 
+    public static function analyticLocationsFromProduct($productId){
+        return Self::selectRaw('
+            nowin_id,
+            nowin_type,
+            SUM(CASE WHEN trx_type = "in" THEN qty ELSE 0 END) as stock_in,
+            SUM(CASE WHEN trx_type = "out" THEN qty ELSE 0 END) as stock_out,
+            SUM(CASE WHEN trx_type = "onway" THEN qty ELSE 0 END) as stock_onway,
+            SUM(CASE WHEN trx_type = "in" THEN qty ELSE 0 END)
+                - (SUM(CASE WHEN trx_type = "out" THEN qty ELSE 0 END) + SUM(CASE WHEN trx_type = "onway" THEN qty ELSE 0 END))
+                as stock_remaining
+            ')
+            ->where('product_id', $productId)
+            ->groupBy('nowin_id', 'nowin_type')
+            ->get()
+            ->keyBy('nowin_id');
+    }
+
     public static function analyticProductsInLocation($loc_type, $loc_id){
         $results = Self::selectRaw('
             nowin_id,

@@ -158,7 +158,7 @@
                             </div>
 
                             <div class="mb-2">
-                                <label class="form-label fw-semibold">Harga per Satuan</label>
+                                <label class="form-label fw-semibold">Patokan Harga Jual per Satuan</label>
                                 <div class="input-group">
                                     <span class="input-group-text px-6" id="basic-addon1"><i
                                             class="ti ti-text-caption fs-6"></i></span>

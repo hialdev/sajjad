@@ -54,7 +54,6 @@ class BalController extends Controller
 
             if($request->purchase_receive_id != null && $request->purchase_receive_id != ''){
                // Jika ada purchase_receive_id, ambil data PurchaseReceive
-               dd($request->all());
                $receive = PurchaseReceive::find($request->get('purchase_receive_id'));
                // Verifikasi Qty
                foreach ($request->get('product_id') as $i => $productId) {

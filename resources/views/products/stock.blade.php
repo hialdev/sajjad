@@ -31,7 +31,10 @@
                 <img src="{{ $product->image ? asset('/storage/'.$product->image) : '/assets/images/profile/user-1.jpg' }}"
                     class="rounded-2" alt="product Image {{ $product->name }}" style="width: 4em" />
                 <div class="ms-3">
-                    <div class="badge bg-primary fs-1 mb-1 text-white">{{ $product->code }}</div>
+                    <div class="d-flex align-items-center gap-1">
+                        <div class="badge bg-primary fs-1 mb-1 text-white">{{ $product->code }}</div>
+                        <div class="badge bg-secondary fs-1 mb-1 text-white">{{ $product->type->type }}</div>
+                    </div>
                     <h6 class="fw-semibold mb-1" style="white-space: normal !important">{{ $product->name }}</h6>
                     <div class="d-flex align-items-center gap-2">
                         <div><i class="ti ti-arrow-up"></i> {{ $product->height }} cm</div>
@@ -51,8 +54,8 @@
     <div class="mb-3 d-flex align-items-center gap-4">
         <h1>Sebaran Stock</h1>
         <div class="d-flex align-items-center gap-1">
-            <div class="bg-primary-subtle text-primary rounded-2 fs-3 px-2 p-1"><i class="ti ti-building-warehouse me-2"></i> {{ $product->warehouse_count }}</div>
-            <div class="bg-primary-subtle text-primary rounded-2 fs-3 px-2 p-1"><i class="ti ti-building-store me-2"></i> {{ $product->store_count }}</div>
+            <div class="bg-primary-subtle text-primary rounded-2 fs-3 px-2 p-1"><i class="ti ti-building-warehouse me-2"></i> {{ count($product->getAnalyticAndLocations()['warehouse']) }}</div>
+            <div class="bg-primary-subtle text-primary rounded-2 fs-3 px-2 p-1"><i class="ti ti-building-store me-2"></i> {{ count($product->getAnalyticAndLocations()['store']) }}</div>
         </div>
     </div>
 
@@ -62,38 +65,38 @@
                 <div class="card-body">
                     <div class="fs-5 fw-bold"><i class="ti ti-building-warehouse me-2"></i> Gudang</div>
 
-                    @forelse ($product->warehouses() as $wstock)
+                    @forelse ($product->getAnalyticAndLocations()['warehouse'] as $wdistribute)
                         @php
-                            $warehouse = $wstock->warehouse;
+                            $wloc = $wdistribute->location;
                         @endphp
                         <div class="bg-white rounded-3 p-3 my-3 position-relative overflow-hidden">
                             <div class="position-absolute top-0 end-0 me-3 p-2 px-3 rounded-bottom-3 bg-primary text-white">
                                 <div class="fs-1 text-muted text-white">Terdapat</div>
-                                <div class="fs-3 fw-bold">{{ $wstock->getProductStock($product->id) }}</div>
+                                <div class="fs-3 fw-bold">{{ $wdistribute->qty }}</div>
                             </div>
 
                             <div class="d-flex align-items-center" style="width:15em">
-                                <img src="{{ $warehouse->image ? asset('/storage/'.$warehouse->image) : '/assets/images/profile/user-1.jpg' }}"
-                                    class="rounded-2" alt="Client Image {{ $warehouse->name }}" style="width: 4em" />
+                                <img src="{{ $wloc->image ? asset('/storage/'.$wloc->image) : '/assets/images/profile/user-1.jpg' }}"
+                                    class="rounded-2" alt="Client Image {{ $wloc->name }}" style="width: 4em" />
                                 <div class="ms-3">
-                                    <h6 class="fw-semibold mb-1" style="white-space: normal !important">{{ $warehouse->name }}</h6>
-                                    <div class="fw-normal text-muted" style="white-space:normal; font-size:13px; ">{{ $warehouse->description ?? 'Tidak ada deskripsi' }}</div>    
+                                    <h6 class="fw-semibold mb-1" style="white-space: normal !important">{{ $wloc->name }}</h6>
+                                    <div class="fw-normal text-muted" style="white-space:normal; font-size:13px; ">{{ $wloc->description ?? 'Tidak ada deskripsi' }}</div>    
                                 </div>
                             </div>
 
                             <div class="mb-2">
-                                <div class="fw-normal fs-2" style="white-space:normal; font-size:13px; ">{{ $warehouse->address }}</div>    
-                                <div class="text-primary fs-2">{{ $warehouse->city }}. {{$warehouse->postal_code}}</div>
+                                <div class="fw-normal fs-2" style="white-space:normal; font-size:13px; ">{{ $wloc->address }}</div>    
+                                <div class="text-primary fs-2">{{ $wloc->city }}. {{$wloc->postal_code}}</div>
                             </div>
 
                             <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                <i class="ti ti-mail mb-0 fs-3"></i> {{ $warehouse->email}}
+                                <i class="ti ti-mail mb-0 fs-3"></i> {{ $wloc->email}}
                             </div>
                             <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                <i class="ti ti-phone mb-0 fs-3"></i> {{ $warehouse->phone}}
+                                <i class="ti ti-phone mb-0 fs-3"></i> {{ $wloc->phone}}
                             </div>
                             <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                <i class="ti ti-phone-check mb-0 fs-3"></i> {{ $warehouse->fax}}
+                                <i class="ti ti-phone-check mb-0 fs-3"></i> {{ $wloc->fax}}
                             </div>
                         </div>
                     @empty
@@ -107,38 +110,38 @@
                 <div class="card-body">
                   <div class="fs-5 fw-bold"><i class="ti ti-building-store me-2"></i> Toko</div>
 
-                  @forelse ($product->stores() as $sstock)
+                  @forelse ($product->getAnalyticAndLocations()['store'] as $sdistribute)
                         @php
-                            $store = $sstock->stock;
+                            $sloc = $sdistribute->location;
                         @endphp
                         <div class="bg-white rounded-3 p-3 my-3 position-relative overflow-hidden">
                             <div class="position-absolute top-0 end-0 me-3 p-2 px-3 rounded-bottom-3 bg-primary text-white">
                                 <div class="fs-1 text-muted text-white">Terdapat</div>
-                                <div class="fs-3 fw-bold">{{ $wstock->getProductStock($product->id) }}</div>
+                                <div class="fs-3 fw-bold">{{ $sdistribute->qty }}</div>
                             </div>
 
                             <div class="d-flex align-items-center" style="width:15em">
-                                <img src="{{ $store->image ? asset('/storage/'.$store->image) : '/assets/images/profile/user-1.jpg' }}"
-                                    class="rounded-2" alt="Client Image {{ $store->name }}" style="width: 4em" />
+                                <img src="{{ $sloc->image ? asset('/storage/'.$sloc->image) : '/assets/images/profile/user-1.jpg' }}"
+                                    class="rounded-2" alt="Client Image {{ $sloc->name }}" style="width: 4em" />
                                 <div class="ms-3">
-                                    <h6 class="fw-semibold mb-1" style="white-space: normal !important">{{ $store->name }}</h6>
-                                    <div class="fw-normal text-muted" style="white-space:normal; font-size:13px; ">{{ $store->description ?? 'Tidak ada deskripsi' }}</div>    
+                                    <h6 class="fw-semibold mb-1" style="white-space: normal !important">{{ $sloc->name }}</h6>
+                                    <div class="fw-normal text-muted" style="white-space:normal; font-size:13px; ">{{ $sloc->description ?? 'Tidak ada deskripsi' }}</div>    
                                 </div>
                             </div>
 
                             <div class="mb-2">
-                                <div class="fw-normal fs-2" style="white-space:normal; font-size:13px; ">{{ $store->address }}</div>    
-                                <div class="text-primary fs-2">{{ $store->city }}. {{$store->postal_code}}</div>
+                                <div class="fw-normal fs-2" style="white-space:normal; font-size:13px; ">{{ $sloc->address }}</div>    
+                                <div class="text-primary fs-2">{{ $sloc->city }}. {{$sloc->postal_code}}</div>
                             </div>
 
                             <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                <i class="ti ti-mail mb-0 fs-3"></i> {{ $store->email}}
+                                <i class="ti ti-mail mb-0 fs-3"></i> {{ $sloc->email}}
                             </div>
                             <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                <i class="ti ti-phone mb-0 fs-3"></i> {{ $store->phone}}
+                                <i class="ti ti-phone mb-0 fs-3"></i> {{ $sloc->phone}}
                             </div>
                             <div class="d-flex align-items-center fs-2 mb-1 gap-2">
-                                <i class="ti ti-phone-check mb-0 fs-3"></i> {{ $store->fax}}
+                                <i class="ti ti-phone-check mb-0 fs-3"></i> {{ $sloc->fax}}
                             </div>
                         </div>
                     @empty
