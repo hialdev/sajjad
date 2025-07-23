@@ -87,6 +87,20 @@
                                 </span>
                             @enderror
                         </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Kode Tipe</label>
+                            <div class="input-group">
+                                <span class="input-group-text px-6" id="basic-addon1"><i
+                                        class="ti ti-code fs-6"></i></span>
+                                <input type="text" name="code" maxlength="6" value="{{old('code', $product_type->code)}}" class="form-control ps-2" placeholder="Code Type Product (Biasanya Inisial 3 digit dari nama)">
+                            </div>
+                            @error('code')
+                                <span class="invalid-feedback" role="alert">
+                                    {{ $message }}
+                                </span>
+                            @enderror
+                        </div>
                         
                         <div class="p-3 rounded-3 bg-primary-subtle mb-2">
                             <label for="type" class="form-label">Tipe Produk</label>
