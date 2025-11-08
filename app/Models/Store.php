@@ -54,14 +54,25 @@ class Store extends Model
         $sstocks = $this->sstockMeters();
         $ss_total = 0;
         $ss_onway = 0;
+        $ss_sold = 0;
         $ss_remaining = 0;
+        $length_remaining = 0;
+        $length_sold = 0;
+        $checksold = false;
         foreach ($sstocks as $sstock) {
             $ss_total += $sstock->qty;
             $ss_onway += $sstock->qty_onway;
+            $checksold = $sstock->length_sold == ((int)$sstock->product->width * (int)$sstock->qty_remaining);
+            if ($checksold) {
+               $ss_sold += $sstock->qty_remaining;
+            }
             $ss_remaining += $sstock->qty_remaining;
+            $length_remaining += $sstock->length_remaining;
+            $length_sold += $sstock->length_sold;
         }
-
-        return (object) [
+        
+        $response = (object) [
+            'condition' => $checksold,
             'stock' => (object) [
                 'total_remaining' => $total_remaining,
                 'total_in' => $total_in,
@@ -72,11 +83,16 @@ class Store extends Model
             'meteran' => (object) [
                 'total_product' => $sstocks->count(),
                 'total_in' => $ss_total,
+                'total_out' => $ss_sold,
                 'total_onway' => $ss_onway,
                 'total_remaining' => $ss_remaining,
+                'length_sold' => $length_sold,
+                'length_remaining' => $length_remaining,
             ],
             'total_bal' => $this->total_bal,
         ];
+        //dd($response);
+        return $response;
     }
 
     public function products()

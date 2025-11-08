@@ -78,6 +78,8 @@ class StockMeter extends Model
                 nowin_type,
                 product_id,
                 SUM(length) as length_total,
+                SUM(sold_length) as length_sold,
+                SUM(length) - SUM(sold_length) as length_remaining,
                 COUNT(*) as qty,
                 SUM(CASE WHEN is_onway = 1 THEN 1 ELSE 0 END) as qty_onway,
                 SUM(CASE WHEN is_onway = 0 THEN 1 ELSE 0 END) as qty_remaining
@@ -85,19 +87,30 @@ class StockMeter extends Model
             ->where('product_id', $productId)
             ->where('nowin_type', $loc_type)
             ->where('nowin_id', $loc_id)
-            ->where('sold_length', 0)
             ->groupBy('nowin_id', 'nowin_type', 'product_id')
             ->get();
 
-        return $results->map(function($item) {
+         $stockDatas = Self::where('product_id', $productId)
+            ->where('nowin_type', $loc_type)
+            ->where('nowin_id', $loc_id)
+            ->get();
+
+
+        $response = $results->map(function($item) use ($stockDatas) {
             return (object) [
                 'product_id' => $item->product_id,
                 'qty' => (int) $item->qty,
                 'qty_onway' => (int) $item->qty_onway,
                 'qty_remaining' => (int) $item->qty_remaining,
                 'length_total' => (int) $item->length_total,
+                'length_remaining' => (int) $item->length_remaining,
+                'length_sold' => (int) $item->length_sold,
+                'details' =>  $stockDatas,
+                'updated_at' => $item->updated_at,
             ];
         })->values();
+
+        return $response;
     }
 
     public static function analyticLocationsFromProduct($productId)

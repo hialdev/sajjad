@@ -74,14 +74,25 @@ class Warehouse extends Model
         $wstocks = $this->wstockmeters();
         $ws_total = 0;
         $ws_onway = 0;
+        $ws_sold = 0;
         $ws_remaining = 0;
+        $length_remaining = 0;
+        $length_sold = 0;
+        $checksold = false;
         foreach ($wstocks as $wstock) {
             $ws_total += $wstock->qty;
             $ws_onway += $wstock->qty_onway;
+            $checksold = $wstock->length_sold == ((int)$wstock->product->width * (int)$wstock->qty_remaining);
+            if ($checksold) {
+               $ws_sold += $wstock->qty_remaining;
+            }
             $ws_remaining += $wstock->qty_remaining;
+            $length_remaining += $wstock->length_remaining;
+            $length_sold += $wstock->length_sold;
         }
-
-        return (object) [
+        
+        $response = (object) [
+            'condition' => $checksold,
             'stock' => (object) [
                 'total_remaining' => $total_remaining,
                 'total_in' => $total_in,
@@ -92,11 +103,16 @@ class Warehouse extends Model
             'meteran' => (object) [
                 'total_product' => $wstocks->count(),
                 'total_in' => $ws_total,
+                'total_out' => $ws_sold,
                 'total_onway' => $ws_onway,
                 'total_remaining' => $ws_remaining,
+                'length_sold' => $length_sold,
+                'length_remaining' => $length_remaining,
             ],
             'total_bal' => $this->total_bal,
         ];
+        //dd($response);
+        return $response;
     }
 
     public function getProductRemaining($product_id)

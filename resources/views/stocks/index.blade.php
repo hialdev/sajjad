@@ -181,8 +181,20 @@
 
                             <div class="d-flex align-items-center">
                                 <div class="px-2 border-x-2 text-success fw-semibold">{{ $wanalytic->meteran->total_in }}</div>
+                                <div class="px-2 border-x-2 text-danger fw-semibold">{{ $wanalytic->meteran->total_out }}</div>
                                 <div class="px-2 border-x-2 text-warning fw-semibold">{{ $wanalytic->meteran->total_onway }}</div>
                             </div>
+                        </div>
+
+                        <div class="d-flex flex-column gap-2 p-2 rounded-2">
+                           <div class="d-flex align-items-center text-danger gap-2">
+                              <i class="ti ti-ruler-2-off me-2"></i>
+                              {{ $wanalytic->meteran->length_sold }} cm Sold
+                           </div>
+                           <div class="d-flex align-items-center text-success gap-2">
+                              <i class="ti ti-ruler-2 me-2"></i>
+                              {{ $wanalytic->meteran->length_remaining }} cm left
+                           </div>
                         </div>
 
                         <div class="mb-1 justify-content-around">
@@ -236,13 +248,26 @@
 
                             <div class="text-dark fs-2 fw-semibold d-flex align-items-center justify-content-center p-1 px-2 rounded-2 bg-primary-subtle mb-1" title="Total Jenis Satuan"><i class="ti ti-ruler me-2"></i> {{$sanalytic->meteran->total_product}} Produk Meteran</div>
                             <div class="d-flex align-items-center pb-1 mb-1 justify-content-around">
-                                <div class="text-dark fw-bold" title="Total Stock Satuan"><i class="ti ti-package me-2"></i> {{$sanalytic->meteran->total_remaining}}</div>
+                                <div class="text-dark fw-bold" title="Total Stock Meteran"><i class="ti ti-package me-2"></i> {{$sanalytic->meteran->total_remaining}}</div>
 
                                 <div class="d-flex align-items-center">
                                     <div class="px-2 border-x-2 text-success fw-semibold">{{ $sanalytic->meteran->total_in }}</div>
+                                    <div class="px-2 border-x-2 text-danger fw-semibold">{{ $sanalytic->meteran->total_out }}</div>
                                     <div class="px-2 border-x-2 text-warning fw-semibold">{{ $sanalytic->meteran->total_onway }}</div>
                                 </div>
                             </div>
+
+                            <div class="d-flex flex-column gap-2 p-2 rounded-2">
+                              <div class="d-flex align-items-center text-danger gap-2">
+                                 <i class="ti ti-ruler-2-off me-2"></i>
+                                 {{ $sanalytic->meteran->length_sold }} cm Sold
+                              </div>
+                              <div class="d-flex align-items-center text-success gap-2">
+                                 <i class="ti ti-ruler-2 me-2"></i>
+                                 {{ $sanalytic->meteran->length_remaining }} cm left
+                              </div>
+                           </div>
+
                             <div class="mb-1 justify-content-around">
                                 <div class="text-dark fs-2 fw-semibold d-flex align-items-center justify-content-center p-1 px-2 rounded-2 border mb-1" title="Total Bal"><i class="ti ti-circles fs-4 me-2"></i> {{$sanalytic->total_bal}} Bal</div>
                             </div>

@@ -84,7 +84,6 @@ class RequestProcessController extends Controller
       $users = User::orderBy('name', 'ASC')->get();
       $warehouses = Warehouse::orderBy('name', 'ASC')->get();
       $stores = Store::orderBy('name', 'ASC')->get();
-
       $filter = (object) [
          'q' => $request->get('search') ?? '',
       ];

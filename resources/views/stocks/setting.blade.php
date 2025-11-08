@@ -236,7 +236,7 @@
                                 </div>
                                 <div style="min-width: 10em">
                                     <div class="fw-normal fs-1 text-muted" style="white-space:normal;">Deksripsi</div>
-                                    <p class="mb-1 fs-2" style="white-space:normal !important;">{{ $move->description ?? 'tidak ada deskripsi' }}</p>
+                                    <p class="mb-1 fs-2" style="white-space:normal !important;">{{ $move?->description ?? 'tidak ada deskripsi' }}</p>
                                 </div>
                             </div>
                             <div class="col-md-4 mb-3 mb-md-0">
@@ -289,7 +289,7 @@
                                                                 <div class="text-decoration-none text-dark fs-3 fw-semibold">
                                                                     {{ $dproduct->product->name }}</div>
                                                                 <div class="text-muted fs-2 mb-2">
-                                                                    {{ $dproduct->product->description ?? 'tidak ada deskripsi' }}</div>
+                                                                    {{ $dproduct->product?->description ?? 'tidak ada deskripsi' }}</div>
                                                             </div>
 
                                                         </div>
@@ -303,7 +303,7 @@
                                                             </div>
                                                             <div class="flex-grow-1">
                                                                 <label for="price_buy" class="text-muted fs-1">Deskripsi / Keterangan</label>
-                                                                <div class="fs-2">{{ $dproduct->description }}</div>
+                                                                <div class="fs-2">{{ $dproduct?->description }}</div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -594,7 +594,7 @@
                         return [
                             'id' => $product->product_id,
                             'qty' => $product->qty,
-                            'description' => $product->description,
+                            'description' => $product?->description,
                         ];
                     })->toArray();
                 }
@@ -655,7 +655,7 @@
                                                     <div><i class="ti ti-arrow-right"></i> {{ $product->width }} cm</div>
                                                 </div>
                                                 <div class="text-muted fs-2 mb-2">
-                                                    {{ $product->description ?? 'tidak ada deskripsi' }}</div>
+                                                    {{ $product?->description ?? 'tidak ada deskripsi' }}</div>
 
                                                 <div class="p-2 my-1 rounded-2 bg-primary-subtle">
                                                     @if($product->type->type == 'meteran')
@@ -770,7 +770,7 @@
                                                     <div><i class="ti ti-arrow-right"></i> {{ $cart->width }} cm</div>
                                                 </div>
                                                 <div class="text-muted fs-2 mb-2">
-                                                    {{ $cart->description ?? 'tidak ada deskripsi' }}</div>
+                                                    {{ $cart?->description ?? 'tidak ada deskripsi' }}</div>
                                             </div>
 
                                             <div class="p-2 my-1 ms-auto rounded-2 bg-primary-subtle">
@@ -818,7 +818,7 @@
                                             <div class="flex-grow-1">
                                                 <label for="receive_qty" class="form-label mb-0 fs-2">Catatan / Keterangan</label>
                                                 <div class="d-flex align-items-center gap-2">
-                                                   <textarea name="desc[]" id="description_{{$cart->id}}" placeholder="Berikan catatan / keterangan apabila diperlukan" cols="30" rows="3" class="form-control form-control-sm" {{ $move->status != 0 ? 'disabled' : '' }}>{{ $moveProduct && $moveProduct->description || $cart['description'] ? $moveProduct->description : ''}}</textarea>
+                                                   <textarea name="desc[]" id="description_{{$cart->id}}" placeholder="Berikan catatan / keterangan apabila diperlukan" cols="30" rows="3" class="form-control form-control-sm" {{ $move->status != 0 ? 'disabled' : '' }}>{{ $moveProduct && $moveProduct?->description || $cart['description'] ? $moveProduct?->description : ''}}</textarea>
                                                 </div>
                                             </div>
                                                 

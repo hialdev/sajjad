@@ -191,6 +191,31 @@
                                           <div class="fs-5 text-primary">{{ $store->getProductRemaining($product->id) }}</div>
                                         </div>
                                     </div>
+                                    
+                                    @if($product->type->type == 'meteran')
+                                       @php
+                                       $detailStocks = $product->getAnalyticLocation('store', $store->id)[0]?->details;
+                                       @endphp
+                                       <div class="p-4 rounded-3 border border-dashed mt-3">
+                                          <div class="fw-medium text-dark mb-2">Detail Stok Produk</div>
+                                          @forelse ($detailStocks as $detail)
+                                             <div class="d-flex align-items-center gap-4">
+                                                <div class="d-flex align-items-center justify-content-center p-2 rounded-circle bg-primary-subtle" style="aspect-ratio: 1/1; width: 2em; height: 2em;">{{ $loop->index+1 }}</div>
+                                                <div>
+                                                   <div class="text-muted">Tersedia</div>
+                                                   <div class="text-success fw-semibold">{{ $detail?->length - $detail?->sold_length }} cm / {{ ($detail?->length - $detail?->sold_length)/100 }}m</div>
+                                                </div>
+                                                <div>
+                                                   <div class="text-muted">Terjual</div>
+                                                   <div class="text-danger fw-semibold">{{ $detail?->sold_length }} cm / {{ $detail?->sold_length / 100 }}m</div>
+                                                </div>
+                                                <div class="p-2 rounded-4 bg-secondary-subtle">Updated at {{ \Carbon\Carbon::parse($detail?->updated_at)->diffForHumans() }}</div>
+                                             </div>
+                                          @empty
+                                             <div class="text-muted">Tidak ada detail stok</div>
+                                          @endforelse
+                                       </div>
+                                    @endif
                                 </div>
                             </div>
                         @empty

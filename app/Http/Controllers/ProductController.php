@@ -17,7 +17,7 @@ class ProductController extends Controller
             'order' => $request->get('order') ? ($request->get('order') == 'newest' ? 'desc' : 'asc') : 'desc',
         ];
 
-        $products = Product::where('name', 'LIKE', '%'.$filter->q.'%')->where('code', 'LIKE', '%'.$filter->q.'%')->orderBy($filter->field, $filter->order)->get();
+        $products = Product::where('name', 'LIKE', '%'.$filter->q.'%')->orWhere('code', 'LIKE', '%'.$filter->q.'%')->orderBy($filter->field, $filter->order)->get();
         return view('products.index', compact('products', 'filter'));
     }
 
